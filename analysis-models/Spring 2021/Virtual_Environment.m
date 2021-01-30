@@ -1,5 +1,6 @@
 clear
 clc
+close all
 %https://multimedia.3m.com/mws/media/199819O/3m-novec-7200-engineered-fluid-en.pdf
 
 %"tank" suffix denotes propellant tank values
@@ -27,7 +28,7 @@ h_evap_water=2.260; %heat of vaporazitaion of water [kJ/kg]
 Cp_water_liquid=4;  %specific heat of liquid water [kJ/kg-K]
 Cp_water_vapor=2;   %specific heat of water vapor [kJ/kg-K]
 Ce_water=1;         %Evaporation Coefficient of water
-Cc_water=0.65;      %Condensation Coefficient of water
+Cc_water=0.75;      %Condensation Coefficient of water
 
 %HFE Properties
 MW_HFE=250;               %Molecular Weight of HFE [kg/kmol]
@@ -35,30 +36,30 @@ R_HFE=R/MW_HFE;           %Specific Gas Constant for HFE [kJ/kg-K]
 h_evap_HFE=0.0308/MW_HFE; %Heat of Vaporization of HFE [kJ/kg]
 Cp_HFEliquid=1.172303;    %Specific Heat of HFE liquid [kJ/kg-K]
 m_HFE=MW_HFE/(N_a*1000);  %mass of one HFE molecule [kg]
-Ce_HFE=0.001625;          %Evaporation Coefficient of HFE (from Justin)
-Cc_HFE=0.0016314;         %Condensation Coefficient of HFE (from Justin)
+Ce_HFE=1;          %Evaporation Coefficient of HFE
+Cc_HFE=0.1;         %Condensation Coefficient of HFE
 
 %Propellant Tank
 P0_tank=101325;                                     %Initial pressure in prop tank [Pa] (1 atm)
 T0_tank=300;                                        %Initial temperature in prop tank [K]
 V_tank=3e-5;                                        %Total volume of prop tank [m^3] (30mL) (CONSTANT)
 volWater0_tank=1.4e-5;                              %initial volume of water in prop tank [m^3] (14mL)
-volHFE_liquid0_tank=10e-6;                          %initial volume of HFE in prop tank [m^3] (10mL)
+volHFE_liquid0_tank=15e-6;                          %initial volume of HFE in prop tank [m^3] (10mL)
 volAir0=V_tank-volWater0_tank-volHFE_liquid0_tank;  %Initial volume of air in prop tank [m^3]
 n_Air=(P0_tank*volAir0)/(R*T0_tank);                %Number of moles of air in propr tank (CONSTANT)
-A_HFE=1.281e-5;                                     %Area from which HFE condenses and evaporates [m^2]
+A_HFE=3.167e-5;                                     %Area from which HFE condenses and evaporates [m^2]
 
 %Collection Chamber
 P0_CC=0;        %initial pressure in collection chamber [Pa]
 T0_CC=300;      %initial temperature in collection chamber [K]
-V_CC=38e-6;     %volume of CC [m^3] (38mL)
+V_CC=227.75e-6; %volume of CC [m^3] (227.75mL)
 
 %Piping network
 D_pipe=(1/8)/39.37;  %Pipe diameter [m] (CONSTANT)
 A=pi*((D_pipe/2)^2); %Area of pipe cross section [m^2] (CONSTANT)
 
 %Orifice
-D_O=0.0002;          %Orifice diameter [m]
+D_O=0.000127;          %Orifice diameter [m]
 A_O=pi*((D_O/2).^2); %Area of orifice [m^2]
 Beta=D_O/D_pipe;     %Ratio of orifice to pipe diameter
 CD_orifice=0.6;      %discharge coefficient of orifice
@@ -68,42 +69,50 @@ volWater_tank=volWater0_tank;      %Initial volume of water in Prop Tank [m^3]
 volWater_CC=0;                     %Initial volume of water in Collection Chamber [m^3]
 volHFE_liquid=volHFE_liquid0_tank; %Volume of HFE Liquid in Prop Tank [m^3]
 tankPress=P0_tank;                 %Pressure in Prop Tank [Pa]
-CC_Press=P0_CC;                    %Pressure in Collection Chamber [Pa]
+CCPress=P0_CC;                    %Pressure in Collection Chamber [Pa]
 tankTempGas=T0_tank;               %Temperature of gas in Prop Tank [K]
 tankTempLiquid=T0_tank;            %Temperature of HFE Liquid in Prop Tank [K]
 CCTempGas=T0_CC;                   %Temperature of gas in CC [K]
 CCTempLiquid=T0_CC;                %Temperature of Water Liquid in CC [K]
 m_HFE_vapor=0;                     %Initial mass of HFE vapor in prop tank
-m_HFE_liquid=volHFE_liquid0_tank;  %Initial mass of HFE liquid in prop tank
+m_HFE_liquid=volHFE_liquid0_tank*nvcRho(T0_tank);  %Initial mass of HFE liquid in prop tank
 m_water_vapor=0;                   %Initial mass of water vapor in CC
 m_water_liquid=0;                  %Initial mass of water liquid in CC
+n_Gas=n_Air;
 time=0;
 count=1;
-dt=0.01;                           %timestep [s]
+dt=1e-3;                           %timestep [s]
 
 %ARRAY INITIALIZATION
-tankVolWater_array=zeros(10000,1);
-tankPress_array=zeros(10000,1);
-tankTempGas_array=zeros(10000,1);
-tankTempLiquid_array=zeros(10000,1);
-CCVolWater_array=zeros(10000,1);
-CCPress_array=zeros(10000,1);
-CCTempGas_array=zeros(10000,1);
-CCTempLiquid_array=zeros(10000,1);
-PvapHFE_array=zeros(10000,1);
-PvapWater_array=zeros(10000,1);
-QHFE_array=zeros(10000,1);
-Qwater_array=zeros(10000,1);
-time_array=zeros(10000,1);
-m_HFE_transfer_array=zeros(10000,1);
+tankVolWater_array=[];
+tankPress_array=[];
+tankTempGas_array=[];
+tankTempLiquid_array=[];
+CCVolWater_array=[];
+CCPress_array=[];
+CCTempGas_array=[];
+CCTempLiquid_array=[];
+PvapHFE_array=[];
+PvapWater_array=[];
+QHFE_array=[];
+Qwater_array=[];
+time_array=[];
+m_HFE_transfer_array=[];
+m_HFE_vapor_array=[];
+m_HFE_liquid_array=[];
+tankVolGas_array=[];
+n_Gas_array=[];
+m_water_vapor_array=[];
+m_water_liquid_array=[];
+m_water_transfer_array=[];
 
 %EXECUTABLE LOOP
 while volWater_tank>0
     
     %Volumetric Flow Rate of Liquid Water Propellant [m^3/s] 
-    flo_water=CD_orifice*A_O*sqrt(2*(tankPress-CC_Press)/(rho_water*(1-(Beta^4))));
+    flo_water=CD_orifice*A_O*sqrt(2*(tankPress-CCPress)/(rho_water*(1-(Beta^4))));
     volWater_tank=volWater_tank-(flo_water*dt);
-    volWater_CC=volWater_CC+(flo_water*dt);
+    volWater_CC=volWater_CC+(2*flo_water*dt);
     
     %PROPELLANT TANK
         %Vapor Pressure of HFE [Pa]
@@ -111,52 +120,54 @@ while volWater_tank>0
 
         %Density of HFE liquid [kg/m^3]
         rho_HFE=nvcRho(tankTempLiquid);
-
-        %Execute before HFE begins to evaporate
-        if tankPress>Pvap_HFE
-
-            %Isentropic Expansion of Air
-            volGas=V_tank-volWater_tank-volHFE_liquid;
-            tankPress=P0_tank*((volAir0/volGas)^(gammaAir));
-            tankTempGas=T0_tank*((volAir0/volGas)^(gammaAir-1));
-            
-            %Allow for no heat transfer from HFE
-            Q_HFE=0;
+        
+        %Volume, Temperature, and Pressure of Gas
+        volGas=V_tank-volWater_tank-volHFE_liquid;
+        tankPress=(n_Gas*R*tankTempGas)/volGas;
+        %tankTempGas=T0_tank*((volAir0/volGas)^(gammaAir-1));
+        
+        %Amount of HFE either condensing or evaporating
+        m_HFE_transfer=HerKnu(Pvap_HFE,tankTempLiquid,tankTempGas,tankPress,m_HFE,A_HFE,Ce_HFE,Cc_HFE)*dt;
+        
+        %No mass evaporating if no liquid and no mass condensing if no vapor
+        if (m_HFE_vapor==0 && m_HFE_transfer<0) || (m_HFE_liquid==0 && m_HFE_transfer>0)
             m_HFE_transfer=0;
-            
-        %Execute after HFE begins to evaporate
-        else
-            %Set variables for previous timestep (for temperature calc)
-            m_vapor_last=m_HFE_vapor;
-            m_liquid_last=m_HFE_liquid;
-            
-            %Mass of HFE either evaporating or condensing at current timestep [kg]
-            m_HFE_transfer=HerKnu(Pvap_HFE,tankTempLiquid,tankTempGas,tankPress,m_HFE,A_HFE,Ce_HFE,Cc_HFE)*dt;
-            
-            %Total mass/moles of HFE vapor at current time [kg,kmol]
-            m_HFE_vapor=m_HFE_transfer+m_HFE_vapor;
-            n_HFE_vapor=m_HFE_vapor/MW_HFE;
-            
-            %Total mass/volume of HFE liquid at current time [kg,m^3]
-            m_HFE_liquid=m_HFE_liquid-m_HFE_transfer;
-            vol_HFE_liquid=m_HFE_liquid/rho_HFE;
-            
-            %Pressure Update
-            n_Gas=n_HFE_vapor+n_Air;
-            volGas=V_tank-volWater_tank-volHFE_liquid;
-            tankPress=(n_Gas*R*tankTempGas)/volGas;
-            
-            %Temperatrue Update
+        end
+        
+        %Mass of vapor and Liquid is zero if negative
+        if m_HFE_liquid<0
+            m_HFE_liquid=0;
+        elseif m_HFE_vapor<0
+            m_HFE_vapor=0;
+        end
+        
+        if tankPress>Pvap_HFE && m_HFE_transfer>0
+            m_HFE_transfer=0;
+        elseif tankPress>Pvap_HFE && m_HFE_transfer<0
+            if m_HFE_vapor==0
+                m_HFE_transfer=0;
+            end
+        end
+        
+        %Update amount of HFE liquid 
+        m_HFE_liquid=m_HFE_liquid-m_HFE_transfer;
+        vol_HFE_liquid=m_HFE_liquid/rho_HFE;
+        
+        %Update amount of HFE vapor 
+        m_HFE_vapor=m_HFE_transfer+m_HFE_vapor;
+        n_HFE_vapor=m_HFE_vapor/MW_HFE;
+        
+        %Update total amount of Gas (Air + HFE)
+        n_Gas=n_HFE_vapor+n_Air;
+        volGas=V_tank-volWater_tank-vol_HFE_liquid;
+        
+        %Temperatrue Update
+        if m_HFE_liquid>0
             Q_HFE=m_HFE_transfer*h_evap_HFE;
-            tankTempGas=(-Q_HFE/(m_HFE_vapor*Cp_HFEliquid))+tankTempGas;
-            tankTempLiquid=(Q_HFE/(m_HFE_liquid*Cp_HFEliquid))+tankTempLiquid;
+            tankTempLiquid=(-Q_HFE/(m_HFE_liquid*Cp_HFEliquid))+tankTempLiquid;
         end
         
     %COLLECTION CHAMBER
-        %Set variables for previous timestep (for temperature calc)
-        m_vapor_last=m_water_vapor;
-        m_liquid_last=m_water_liquid;
-        
         %Surface Area of Collected Water [m^2]
         r=((3*volWater_CC)/(4*pi))^(1/3);
         A_water=4*pi*(r^2);
@@ -165,22 +176,45 @@ while volWater_tank>0
         Pvap_water=waterVP(CCTempLiquid);
         
         %Mass of water either evaporating or condensing at current timestep [kg]
-        m_water_transfer=HerKnu(Pvap_water,CCTempLiquid,CCTempGas,CC_Press,m_H2O,A_water,Ce_water,Cc_water)*dt;
+        m_water_transfer=HerKnu(Pvap_water,CCTempLiquid,CCTempGas,CCPress,m_H2O,A_water,Ce_water,Cc_water)*dt;
         
-        %Total mass/moles of water vapor at current time [kg,kmol]
+        %No mass evaporating if no liquid and no mass condensing if no vapor
+        if (m_water_vapor==0 && m_water_transfer<0) || (m_water_liquid==0 && m_water_transfer>0)
+            m_HFE_transfer=0;
+        end
+        
+        if CCPress>Pvap_water && m_water_transfer>0
+            m_water_transfer=0;
+        elseif CCPress>Pvap_HFE && m_water_transfer<0
+            if m_water_vapor==0
+                m_water_transfer=0;
+            end
+        end
+        
+        %Total mass of water vapor at current time [kg]
         m_water_vapor=m_water_transfer+m_water_vapor;
-        n_water_vapor=m_water_vapor/MW_Water;
         
         %Total mass of water liquid at current time [kg]
         m_water_liquid=(volWater_CC*rho_water)-m_water_vapor;
         
+        %Mass of Vapor and Liquid is zero if negative
+        if m_water_liquid<0
+            m_water_liquid=0;
+        elseif m_water_vapor<0
+            m_water_vapor=0;
+        end
+        
+        n_water_vapor=m_water_vapor/MW_Water;
+        
         %Pressure Update
-        CC_Press=(n_water_vapor*R*CCTempGas)/(V_CC-volWater_CC);
+        CCPress=(n_water_vapor*R*CCTempGas)/(V_CC-volWater_CC);
         
         %Temperature Update
         Q_water=m_water_transfer*h_evap_water;
-        CCTempGas=(-Q_water/(m_water_vapor*Cp_water_vapor))+CCTempGas;
-        CCTempLiquid=(Q_water/(m_water_liquid*Cp_water_liquid))+CCTempLiquid;
+        
+        if m_water_liquid>0
+            CCTempLiquid=(-Q_water/(m_water_liquid*Cp_water_liquid))+CCTempLiquid;
+        end
     
     %ARRAY UPDATE
         %Propellant Tank
@@ -188,12 +222,19 @@ while volWater_tank>0
         tankPress_array(count)=tankPress;
         tankTempGas_array(count)=tankTempGas;
         tankTempLiquid_array(count)=tankTempLiquid;
+        tankVolGas_array(count)=volGas;
+        m_HFE_vapor_array(count)=m_HFE_vapor;
+        m_HFE_liquid_array(count)=m_HFE_liquid;
+        n_Gas_array(count)=n_Gas;
         
         %Collection Chamber
         CCVolWater_array(count)=volWater_CC;
-        CCPress_array(count)=CC_Press;
+        CCPress_array(count)=CCPress;
         CCTempGas_array(count)=CCTempGas;
         CCTempLiquid_array(count)=CCTempLiquid;
+        m_water_vapor_array(count)=m_water_vapor;
+        m_water_liquid_array(count)=m_water_liquid;
+        m_water_transfer_array(count)=m_water_transfer;
         
         %Miscellaneous
         PvapHFE_array(count)=Pvap_HFE;
@@ -201,69 +242,57 @@ while volWater_tank>0
         PvapWater_array(count)=Pvap_water;
         Qwater_array(count)=flo_water;
         time_array(count)=time;
-        %m_HFE_transfer_array(count)=m_HFE_transfer;
+        m_HFE_transfer_array(count)=m_HFE_transfer;
         
         time=time+dt;
         count=count+1;      
 end
 
 %Data manipulation
-v=nonzeros(time_array);
-time_array=[0; reshape(v,length(v),1); time+dt];
-v=nonzeros(tankVolWater_array);
-tankVolWater_array=[volWater0_tank; reshape(v,length(v),1)];
-v=nonzeros(tankPress_array);
-tankPress_array=[P0_tank; reshape(v,length(v),1)];
-v=nonzeros(tankTempGas_array);
-tankTempGas_array=[T0_tank; reshape(v,length(v),1)];
-v=nonzeros(tankTempLiquid_array);
-tankTempLiquid_array=[T0_tank; reshape(v,length(v),1)];
-v=nonzeros(CCVolWater_array);
-CCVolWater_array=[0; reshape(v,length(v),1)];
-v=nonzeros(CCPress_array);
-CCPress_array=[P0_CC; reshape(v,length(v),1)];
-v=nonzeros(CCTempGas_array);
-CCTempGas_array=[T0_CC; reshape(v,length(v),1)];
-v=nonzeros(CCTempLiquid_array);
-CCTempLiquid_array=[T0_CC; reshape(v,length(v),1)];
-v=nonzeros(PvapHFE_array);
-PvapHFE_array=[nvcVP(T0_tank); reshape(v,length(v),1)];
-v=nonzeros(PvapWater_array);
-PvapWater_array=[waterVP(T0_tank); reshape(v,length(v),1)];
-v=nonzeros(Qwater_array);
-Qwater_array=reshape(v,length(v),1);
-v=nonzeros(QHFE_array);
-QHFE_array=reshape(v,length(v),1);
+time_array=time_array';
 
 %Plots
 figure(1)
-plot(time_array,tankVolWater_array*10^6,'Linewidth',1)
+plot(time_array,tankVolWater_array'*10^6,'Linewidth',3)
 hold on
-plot(time_array,CCVolWater_array*10^6,'Linewidth',1)
+plot(time_array,CCVolWater_array'*10^6,'Linewidth',3)
 xlabel("Time [s]",'Fontsize',17)
 ylabel("Volume of Water in Prop Tank and CC [mL]",'Fontsize',17)
 legend("Tank","CC",'Fontsize',15)
 title("Volumes of Collection Chamber and Propellant Tank",'Fontsize',22)
 
 figure(2)
-plot(time_array,tankTempGas_array)
+plot(time_array,tankTempGas_array')
 hold on
-plot(time_array,CCTempGas_array)
-plot(time_array,CCTempLiquid_array)
-plot(time_array,tankTempLiquid_array)
-xlabel("time [s]")
-ylabel("Temperature [K]")
-legend("Temp of gas in tank","Temp of gas in CC","temp of liquid in CC","Temp of liquid in tank")
+plot(time_array,CCTempGas_array')
+plot(time_array,CCTempLiquid_array')
+plot(time_array,tankTempLiquid_array')
+xlabel("time [s]",'Fontsize',17)
+ylabel("Temperature [K]",'Fontsize',17)
+legend("Temp of gas in tank","Temp of gas in CC","temp of liquid in CC","Temp of liquid in tank",'Fontsize',17)
+title("Temperature values for Duration of Experiment",'Fontsize',22)
 
 figure(3)
-plot(time_array,tankPress_array/1000)
+plot(time_array,tankPress_array'/1000,'Linewidth',3)
 hold on
-plot(time_array,CCPress_array/1000)
-plot(time_array,PvapHFE_array/1000)
-plot(time_array,PvapWater_array/1000)
-xlabel("time [s]")
-ylabel("Pressure of Prop Tank [kPa]")
-legend("Tank Pressure","CC Pressure","Vapor Pressure of HFE","Vapor Pressure of Water")
+plot(time_array,PvapHFE_array'/1000,'Linewidth',3)
+xlabel("Time [s]",'Fontsize',17)
+ylabel("Pressure of Prop Tank [kPa]",'Fontsize',17)
+legend("Tank Pressure","Vapor Pressure of HFE",'Fontsize',17)
+title("Pressures in Propellant Tank",'Fontsize',22)
+
+figure(4)
+plot(time_array,CCPress_array'/1000,'Linewidth',3)
+hold on
+plot(time_array,PvapWater_array'/1000,'Linewidth',3)
+xlabel("Time [s]",'Fontsize',17)
+ylabel("Pressure of Collection Chamber [kPa]",'Fontsize',17)
+legend("CC Pressure","Vapor Pressure of Water",'Fontsize',17)
+title("Pressures in Collection Chamber",'Fontsize',22)
+
+figure(5)
+plot(time_array,m_water_transfer_array')
+
 
 % figure(3)
 % plot(timescale,tankTemp_array)
