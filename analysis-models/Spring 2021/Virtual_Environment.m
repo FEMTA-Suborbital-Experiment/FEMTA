@@ -3,6 +3,36 @@ clc
 close all
 %https://multimedia.3m.com/mws/media/199819O/3m-novec-7200-engineered-fluid-en.pdf
 
+%{
+Created on Tue Feb 09 2020
+    Virtual Environment Simulation of FEMTA propellant management system 
+    for testing of flight computer and verification of experimental
+    process. Simulation accepts flight conditions and returns relevant data
+    for sensor testing under six conditions.
+    
+    1.) From take-off to the point of experiment startup. This data is
+    largely assumed ambient and consists of pressure and temperature. No
+    experimental changes contribute to these values. 
+    Variable condition for this phase: flightCond=1
+    2.) From experiment start to end. There are four possible valve states
+    that make up this condition.
+    Variable condition for this phase: flightCond=2
+        a.) Variable condition for both flow solenoids open and vent 
+            solenoid closed (normal): simCond = 1
+        b.) Variable condition for one flow solenoid open and vent 
+            solenoid closed: simCond = 2
+        c.) Variable condition for both fow solenoids open and vent 
+            solenoid open: simCond = 3
+        d.) Variable condition for one flow solenoid open and vent 
+            solenoid open: simCond = 4
+    3.) From end of experiment through descent to landing. This data is
+    largely assumed ambient and consists of pressure and temperature. No
+    experimental changes contribute to these values. 
+
+@author: Alan J
+@co-author: Daniel Q
+%}
+
 %"tank" suffix denotes propellant tank values
 %"CC" suffix denotes collection chamber values
 %"O" suffix denotes orifice values
@@ -10,24 +40,24 @@ close all
 
 %CONSTANT AND INITIAL VALUES
 global R kB N_a;
-R=8.3145;           %Universal Gas Constant [kJ/kmol-K]
-kB=1.380649e-23;    %Boltzmann constant [J/K]
-N_a=6.02214e23;     %Avogadros number [# of particles/mol]
+R=8.3145;                 %Universal Gas Constant [kJ/kmol-K]
+kB=1.380649e-23;          %Boltzmann constant [J/K]
+N_a=6.02214e23;           %Avogadros number [# of particles/mol]
 
 %Air Properties
-gammaAir=1.4;     %ratio of specific heats for air
-MW_Air=29;        %Molecular Weight of Air [kg/kmol]
-R_air=R/MW_Air;   %Specific Gas Constant for Air [kJ/kg-K]
-Cp_Air=1.005;     %Specific Heat of Air [kJ/kg-K]
+gammaAir=1.4;             %ratio of specific heats for air
+MW_Air=29;                %Molecular Weight of Air [kg/kmol]
+R_air=R/MW_Air;           %Specific Gas Constant for Air [kJ/kg-K]
+Cp_Air=1.005;             %Specific Heat of Air [kJ/kg-K]
  
 %Water Properties
-rho_water=997;      %density of liquid water [kg/m^3]
-m_H2O=2.988e-26;    %mass of one water molecule [kg]
-MW_Water=18.0135;   %Molecular weight of water [kg/kmol]
-Cp_water_liquid=4;  %specific heat of liquid water [kJ/kg-K]
-Cp_water_vapor=2;   %specific heat of water vapor [kJ/kg-K]
-Ce_water=1;         %Evaporation Coefficient of water
-Cc_water=0.75;      %Condensation Coefficient of water
+rho_water=997;            %density of liquid water [kg/m^3]
+m_H2O=2.988e-26;          %mass of one water molecule [kg]
+MW_Water=18.0135;         %Molecular weight of water [kg/kmol]
+Cp_water_liquid=4;        %specific heat of liquid water [kJ/kg-K]
+Cp_water_vapor=2;         %specific heat of water vapor [kJ/kg-K]
+Ce_water=1;               %Evaporation Coefficient of water
+Cc_water=0.75;            %Condensation Coefficient of water
 
 %HFE Properties
 MW_HFE=250;               %Molecular Weight of HFE [kg/kmol]
@@ -36,7 +66,7 @@ h_evap_HFE=0.0308/MW_HFE; %Heat of Vaporization of HFE [kJ/kg]
 Cp_HFEliquid=1.172303;    %Specific Heat of HFE liquid [kJ/kg-K]
 m_HFE=MW_HFE/(N_a*1000);  %mass of one HFE molecule [kg]
 Ce_HFE=1;                 %Evaporation Coefficient of HFE
-Cc_HFE=1;               %Condensation Coefficient of HFE
+Cc_HFE=1;                 %Condensation Coefficient of HFE
 
 %Propellant Tank
 P0_tank=101325;                                           %Initial pressure in prop tank [Pa] (1 atm)
@@ -52,17 +82,17 @@ A_HFE=3.167e-5;                                           %Area from which HFE c
 P0_CC=0;                  %initial pressure in collection chamber [Pa]
 T0_CC=300;                %initial temperature in collection chamber [K]
 V_CC=542.248e-6;          %volume of CC [m^3] (227.75mL)
-ventSolenoidDiam=0.0001;  %Daimeter of vent solenoid [m]
+ventSolenoidDiam=0.1e-3;  %Daimeter of vent solenoid [m]
 
 %Piping network
-D_pipe=(1/8)/39.37;  %Pipe diameter [m] (CONSTANT)
-A=pi*((D_pipe/2)^2); %Area of pipe cross section [m^2] (CONSTANT)
+D_pipe=(1/8)/39.37;       %Pipe diameter [m] (CONSTANT)
+A=pi*((D_pipe/2)^2);      %Area of pipe cross section [m^2] (CONSTANT)
 
 %Orifice
-D_O=0.000127;        %Orifice diameter [m]
-A_O=pi*((D_O/2).^2); %Area of orifice [m^2]
-Beta=D_O/D_pipe;     %Ratio of orifice to pipe diameter
-CD_orifice=0.6;      %discharge coefficient of orifice
+D_O=0.000127;             %Orifice diameter [m]
+A_O=pi*((D_O/2).^2);      %Area of orifice [m^2]
+Beta=D_O/D_pipe;          %Ratio of orifice to pipe diameter
+CD_orifice=0.6;           %discharge coefficient of orifice
 
 %VARIABLES
 volWater_tank=volWater0_tank;                      %Initial volume of water in one Prop Tank [m^3]
@@ -127,7 +157,7 @@ m_water_total_array=[];
 %   One flow solenoid open and vent solenoid open: simCond = 4
 %Post-Experiment; descending to landing: flightCond = 3
 flightCond=2;
-simCond=1;
+simCond=3;
 
 %EXECUTABLE LOOP
 if flightCond==1
