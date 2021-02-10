@@ -8,10 +8,18 @@
  * Date: November 5, 2020
  */
 
-define enter start;
+define enter start; 
 
-Sensor slf3_left 10Hz {
 
+
+Sensor slf3_left 100Hz {
+  
+  [calibrate   | Flow, poly, raw, ml/min | 1 0]
+  [conversions | Flow, raw, ml/min]
+  
   // options are Flow, Temperature, or Bubble
   [print | white, Flow | 1 ];
 }
+
+
+
