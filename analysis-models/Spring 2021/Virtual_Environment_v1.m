@@ -62,7 +62,7 @@ Cc_water=0.75;            %Condensation Coefficient of water
 %HFE Properties
 MW_HFE=250;               %Molecular Weight of HFE [kg/kmol]
 R_HFE=R/MW_HFE;           %Specific Gas Constant for HFE [kJ/kg-K]
-h_evap_HFE=0.0308/MW_HFE; %Heat of Vaporization of HFE [kJ/kg]
+h_evap_HFE=125.6;         %Heat of Vaporization of HFE [kJ/kg]
 Cp_HFEliquid=1.172303;    %Specific Heat of HFE liquid [kJ/kg-K]
 m_HFE=MW_HFE/(N_a*1000);  %mass of one HFE molecule [kg]
 Ce_HFE=1;                 %Evaporation Coefficient of HFE
@@ -89,7 +89,7 @@ D_pipe=(1/8)/39.37;       %Pipe diameter [m] (CONSTANT)
 A=pi*((D_pipe/2)^2);      %Area of pipe cross section [m^2] (CONSTANT)
 
 %Orifice
-D_O=0.000127;             %Orifice diameter [m]
+D_O=0.000065;             %Orifice diameter [m]
 A_O=pi*((D_O/2).^2);      %Area of orifice [m^2]
 Beta=D_O/D_pipe;          %Ratio of orifice to pipe diameter
 CD_orifice=0.6;           %discharge coefficient of orifice
@@ -101,7 +101,7 @@ volHFE_liquid=volHFE_liquid0_tank;                 %Volume of HFE Liquid in Prop
 tankPress=P0_tank;                                 %Pressure in Prop Tank [Pa]
 CCPress=P0_CC;                                     %Pressure in Collection Chamber [Pa]
 tankTempGas=T0_tank;                               %Temperature of gas in Prop Tank [K]
-tankTempLiquid=T0_tank;                            %Temperature of HFE Liquid in Prop Tank [K]
+tankTempLiquid_HFE=T0_tank;                        %Temperature of HFE Liquid in Prop Tank [K]
 CCTempGas=T0_CC;                                   %Temperature of gas in CC [K]
 CCTempLiquid=T0_CC;                                %Temperature of Water Liquid in CC [K]
 m_HFE_vapor=0;                                     %Initial mass of HFE vapor in prop tank
@@ -144,6 +144,9 @@ volGas_array=[];
 nGas_array=[];
 m_HFE_total_array=[];
 m_water_total_array=[];
+T1_array=[];
+T2_array=[];
+T3_array=[];
 
 %COMPUTER SYSTEM STATUS INPUT
 %The Sim Box will generate the conditions under which the experiment will
@@ -157,12 +160,12 @@ m_water_total_array=[];
 %   One flow solenoid open and vent solenoid open: simCond = 4
 %Post-Experiment; descending to landing: flightCond = 3
 flightCond=2;
-simCond=3;
+simCond=1;
 
 %EXECUTABLE LOOP
 if flightCond==1
 elseif flightCond==2
-        while volWater_tank>0
+    while volWater_tank>0
         
         %Condition if solenoid valve shuts mid experiment
         if (simCond==2 || simCond==4) && (volWater_shut < volWater_tank)
@@ -200,17 +203,17 @@ elseif flightCond==2
 
         %PROPELLANT TANK
             %Vapor Pressure of HFE [Pa]
-            Pvap_HFE=nvcVP(tankTempLiquid);
+            Pvap_HFE=nvcVP(tankTempLiquid_HFE);
 
             %Density of HFE liquid [kg/m^3]
-            rho_HFE=nvcRho(tankTempLiquid);
+            rho_HFE=nvcRho(tankTempLiquid_HFE);
 
             %Temperature and Pressure of Gas [K, Pa]
             tankPress=(n_Gas*R*tankTempGas)/volGas;
             %tankTempGas=T0_tank*((volAir0/volGas)^(gammaAir-1));
 
             %Amount of HFE either condensing or evaporating
-            m_HFE_transfer=HerKnu(Pvap_HFE,tankTempLiquid,tankTempGas,tankPress,m_HFE,A_HFE,Ce_HFE,Cc_HFE)*dt;
+            m_HFE_transfer=HerKnu(Pvap_HFE,tankTempLiquid_HFE,tankTempGas,tankPress,m_HFE,A_HFE,Ce_HFE,Cc_HFE)*dt;
             m_HFE_unaltered=m_HFE_transfer;
 
             %No mass evaporating if no liquid and no mass condensing if no vapor
@@ -222,6 +225,8 @@ elseif flightCond==2
             m_HFE_liquid=m_HFE_liquid-m_HFE_transfer;
             m_HFE_vapor=m_HFE_transfer+m_HFE_vapor;
 
+            %Pa/Pcc = (1+k-1/2)&(k/k-1)
+            
             %Mass of vapor and Liquid is zero if negative
             if m_HFE_liquid<0
                 m_HFE_liquid=0;
@@ -245,7 +250,7 @@ elseif flightCond==2
             Q_HFE=m_HFE_transfer*h_evap_HFE;
 
             if m_HFE_liquid>0
-                tankTempLiquid=(-Q_HFE/(m_HFE_liquid*Cp_HFEliquid))+tankTempLiquid;
+                tankTempLiquid_HFE=(-Q_HFE/(m_HFE_liquid*Cp_HFEliquid))+tankTempLiquid_HFE;
             end
             
             %Check total mass of HFE in Prop Tank [kg]
@@ -289,15 +294,24 @@ elseif flightCond==2
             CCPress=(n_water_vapor*R*CCTempGas)/(V_CC-volWater_CC);
 
             %Temperature Update [K]
+            Q_water=m_water_transfer*h_evap_water;
+            mwn=flo_water*rho_water*dt;
+            T1=((m_water_liquid-mwn)/m_water_liquid)*CCTempLiquid;
+            T2=(mwn/m_water_liquid)*300;
+            T3=-Q_water/(m_water_liquid*Cp_water_liquid);
+            H_total=H2-Q_water;
+            H2=mwn*Cp_water_liquid*300;
             if CCTempLiquid>273
-                Q_water=m_water_transfer*h_evap_water;
+                %CCTempLiquid=(H_total/(m_water_liquid*Cp_water_liquid))+CCTempLiquid;
+                CCTempLiquid=T1+T2+T3;
             else
-                Q_water=0;
+                %CCTempLiquid=(H_total/(mwn*dt*Cp_water_liquid))+CCTempLiquid;
+                CCTempLiquid=T2+CCTempLiquid;
             end
+            
+            %Tw = mwi/(mwi+mwn)*Twi + mwn/(mwi+mwn)*Twn - Q/(mwi+mwn)*Cp
 
-            if m_water_liquid>0
-                CCTempLiquid=(-Q_water/(m_water_liquid*Cp_water_liquid))+CCTempLiquid;
-            end
+
 
         %Update total mass of water in the system [kg]
         if simCond==1 || simCond==3
@@ -311,7 +325,7 @@ elseif flightCond==2
             tankVolWater_array(count)=volWater_tank;
             tankPress_array(count)=tankPress;
             tankTempGas_array(count)=tankTempGas;
-            tankTempLiquid_array(count)=tankTempLiquid;
+            tankTempLiquid_array(count)=tankTempLiquid_HFE;
             tankVolGas_array(count)=volGas;
             m_HFE_vapor_array(count)=m_HFE_vapor;
             m_HFE_liquid_array(count)=m_HFE_liquid;
@@ -332,12 +346,15 @@ elseif flightCond==2
             m_water_unaltered_array(count)=m_water_unaltered;
             h_evap_water_array(count)=h_evap_water;
             m_water_total_array(count)=m_water_total;
+            T1_array(count)=T1;
+            T2_array(count)=H2;
+            T3_array(count)=H_total;
 
             %Miscellaneous
             PvapHFE_array(count)=Pvap_HFE;
             QHFE_array(count)=Q_HFE;
             PvapWater_array(count)=Pvap_water;
-            Qwater_array(count)=flo_water;
+            Qwater_array(count)=Q_water;
             time_array(count)=time;
             m_HFE_transfer_array(count)=m_HFE_transfer;
 
@@ -345,10 +362,10 @@ elseif flightCond==2
             count=count+1; 
 
             %Test Condition
-            if time>75.4030
-                simCond=1;
-            end
-        end
+%             if time>75.4030
+%                 simCond=1;
+%             end
+    end
 elseif flightCond==3
 else
     fprintf("\nError: Invalid Flight Condition\n\n")
@@ -383,6 +400,9 @@ QHFE_array=QHFE_array';
 PvapWater_array=PvapWater_array';
 Qwater_array=Qwater_array';
 m_HFE_transfer_array=m_HFE_transfer_array';
+T1_array=T1_array';
+T2_array=T2_array';
+T3_array=T3_array';
 
 
 %Plots
@@ -445,8 +465,12 @@ ylabel("Mass of Water [g]")
 title("Amount of Water in Each State")
 legend("Water Vapor","Water Liquid","Water Total","Water in One Prop Tank")
 
-% figure(7)
-% plot(time_array,m_water_unaltered_array)
+figure(7)
+% plot(time_array,T1_array)
+% hold on
+% plot(time_array,T2_array)
+plot(time_array,T3_array)
+legend("Temp Contribution from water in tank","Temp Contribution from new water","Temp Contribution from evaporation")
 
 %Vapor Pressure of NV 7100 (T in K, vp in Pa)
 function vp = nvcVP(T)
@@ -478,6 +502,9 @@ function hv=waterHV(T)
     Hvs=[2500.9 2496.2 2491.4 2477.2 2467.7 2458.3 2453.5 2441.7 2429.8 2420.3 2406 2396.4 2381.9 2372.3 2357.7 2333 2308 2282.5 2266.9 2256.4 2229.6 2202.1 2144.3 2082 2014.2 1939.7 1857.4 1765.4 1661.6 1543 1404.6 1238.4 1027.3 719.8];
     Ts=[0.00 2 4 10 14 18 20 25 30 34 40 44 50 54 60 70 80 90 96 100 110 120 140 160 180 200 220 240 260 280 300 320 340 360]+273;
     hv=interp1(Ts, Hvs, T, 'linear').*1000;
+    if isnan(hv)
+        hv=0;
+    end
 end
 
 %mDotThruOrifice calculates mass flow (mDot) in kg/s through an orifice
