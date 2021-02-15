@@ -4,7 +4,7 @@ close all
 %FLAGS
 pre_exp=1;
 flowSol=2;
-ventSol=0;
+ventSol=1;
 
 %CONSTANT AND INITIAL VALUES
 global R kB N_a;
@@ -85,7 +85,7 @@ volWater_shut=0;                                   %Initial volume of water in p
 alt=0;                                             %altitude above sea level [m]
 time=0;
 count=1;                           
-dt=1e-3;    %timestep [s]
+dt=1e-5;    %timestep [s] (will not run accurately at more than 1e-5)
 
 %ARRAY INITIALIZATION
 tankVolWater_array=[];
@@ -147,12 +147,14 @@ end
 
 CCPressAir=CCPress;
 
+tic
 %Experiment Loop
 while volWater_tank-volWater_shut>0
-    
+        
+        %Conditions for loop termination
         if flowSol==1 && volWater_shut==0
             volWater_shut=0.5*volWater_tank;
-        elseif flowSol==2 && volWater_shut~=0
+        elseif flowSol==2
             volWater_shut=0;
         end
 
@@ -163,7 +165,7 @@ while volWater_tank-volWater_shut>0
             break
         end
         
-        %Moles of air in CC and Partial Pressure
+        %Moles and Partial Pressure of Air in CC 
         nAir_CC=((CCPressAir*(V_CC-volWater_CC))/(R*CCTempGas));
         nWaterVapor_CC=(m_water_vapor*1000)/MW_Water;
         xAir_CC=nAir_CC/(nAir_CC+nWaterVapor_CC);
@@ -318,7 +320,7 @@ while volWater_tank-volWater_shut>0
             T3_array(count)=H_total;
             nAir_CC_array(count)=nAir_CC;
             m_water_lost_array(count)=m_water_lost;
-            %m_air_lost_array(count)=m_air_lost;
+            m_air_lost_array(count)=m_air_lost;
             m_lost_array(count)=m_lost;
             nWaterVapor_CC_array(count)=nWaterVapor_CC;
 
@@ -333,12 +335,19 @@ while volWater_tank-volWater_shut>0
             time=time+dt;
             count=count+1; 
             
-            if time>50
-                flowSol=2;
-            end
+%             if time>50
+%                 flowSol=2;
+%             end
+%             if time>100
+%                 flowSol=1;
+%             end
+%             if time>150
+%                 flowSol=2;
+%             end
 end
-    
-%Data manipulation
+toc
+
+%Array Transpose
 time_array=time_array';
 m_water_total_array=m_water_total_array';
 m_HFE_total_array=m_HFE_total_array';
@@ -378,65 +387,79 @@ m_lost_array=m_lost_array';
 nWaterVapor_CC_array=nWaterVapor_CC_array';
 
 
-%Plots
+%PLOTS
+%Volumes of both Prop Tank and CC
 figure(1)
 plot(time_array,tankVolWater_array*10^6,'Linewidth',3)
 hold on
 plot(time_array,CCVolWater_array*10^6,'Linewidth',3)
 xlabel("Time [s]",'Fontsize',17)
-ylabel("Volume of Water in Prop Tank and CC [mL]",'Fontsize',17)
-legend("Prop Tank","CC",'Fontsize',15)
+ylabel("Volume of Water [mL]",'Fontsize',17)
+legend("Propellant Tank","Collection Chamber",'Fontsize',15)
 title("Volumes of Collection Chamber and Propellant Tank",'Fontsize',22)
 
+%Temperature in Prop Tank
 figure(2)
-plot(time_array,tankTempGas_array)
+plot(time_array,tankTempGas_array,'Linewidth',3)
 hold on
-plot(time_array,CCTempGas_array)
-plot(time_array,CCTempLiquid_array)
-plot(time_array,tankTempLiquid_array)
-xlabel("time [s]",'Fontsize',17)
+plot(time_array,tankTempLiquid_array,'Linewidth',3)
+xlabel("Time [s]",'Fontsize',17)
 ylabel("Temperature [K]",'Fontsize',17)
-legend("Temp of HFE vapor in Tank","Temp of Water Vapor in CC","Temp of Liquid Water in CC","Temp of Liquid HFE in Tank",'Fontsize',12)
-title("Temperature Values for Duration of Experiment",'Fontsize',22)
+legend("Gas","Liquid HFE",'Fontsize',15)
+title("Temperature in Propellant Tank",'Fontsize',22)
 
+%Temperature in CC
 figure(3)
+plot(time_array,CCTempGas_array,'Linewidth',3)
+hold on
+plot(time_array,CCTempLiquid_array,'Linewidth',3)
+legend("Water Vapor","Liquid Water",'Fontsize',15)
+title("Temperature in Collection Chamber",'Fontsize',22)
+xlabel("Time [s]",'Fontsize',17)
+ylabel("Temperature [K]",'Fontsize',17)
+
+%Pressure in Prop Tank
+figure(4)
 plot(time_array,tankPress_array/1000,'Linewidth',3)
 hold on
 plot(time_array,PvapHFE_array/1000,'Linewidth',3)
 xlabel("Time [s]",'Fontsize',17)
-ylabel("Pressure of Prop Tank [kPa]",'Fontsize',17)
-legend("Tank Pressure","Vapor Pressure of HFE",'Fontsize',17)
+ylabel("Pressure [kPa]",'Fontsize',17)
+legend("Propellant Tank Pressure","Vapor Pressure of HFE",'Fontsize',15)
 title("Pressures in Propellant Tank",'Fontsize',22)
 
-figure(4)
+%Pressures in CC
+figure(5)
 plot(time_array,CCPress_array/1000,'Linewidth',3)
 hold on
 plot(time_array,PvapWater_array/1000,'Linewidth',3)
 xlabel("Time [s]",'Fontsize',17)
-ylabel("Pressure of Collection Chamber [kPa]",'Fontsize',17)
-legend("CC Pressure","Vapor Pressure of Water",'Fontsize',17)
+ylabel("Pressure [kPa]",'Fontsize',17)
+legend("Collection Chamber Pressure","Vapor Pressure of Water",'Fontsize',15)
 title("Pressures in Collection Chamber",'Fontsize',22)
 
-figure(5)
-plot(time_array,m_HFE_vapor_array*1000)
-hold on
-plot(time_array,m_HFE_liquid_array*1000)
-plot(time_array,m_HFE_total_array*1000)
-xlabel("Time [s]")
-ylabel("Mass of HFE [g]")
-title("Amount of HFE in Each State")
-legend("HFE Vapor","HFE Liquid","HFE Total")
-
+%Mass of HFE in All States
 figure(6)
-plot(time_array,m_water_vapor_array*1000)
+plot(time_array,m_HFE_vapor_array*1000,'Linewidth',2)
 hold on
-plot(time_array,m_water_liquid_array*1000)
-plot(time_array,m_water_total_array*1000)
-plot(time_array,tankVolWater_array*rho_water*1000)
-xlabel("Time [s]")
-ylabel("Mass of Water [g]")
-title("Amount of Water in Each State")
-legend("Water Vapor","Water Liquid","Water Total","Water in One Prop Tank")
+plot(time_array,m_HFE_liquid_array*1000,'Linewidth',2)
+plot(time_array,m_HFE_total_array*1000,'Linewidth',2)
+xlabel("Time [s]",'Fontsize',17)
+ylabel("Mass of HFE [g]",'Fontsize',17)
+title("Amount of HFE in Each State",'Fontsize',22)
+legend("HFE Vapor","HFE Liquid","HFE Total",'Fontsize',15)
+
+%Mass of Water in All States
+figure(7)
+plot(time_array,m_water_vapor_array*1000,'Linewidth',2)
+hold on
+plot(time_array,m_water_liquid_array*1000,'Linewidth',2)
+plot(time_array,m_water_total_array*1000,'Linewidth',2)
+plot(time_array,tankVolWater_array*rho_water*1000,'Linewidth',2)
+xlabel("Time [s]",'Fontsize',17)
+ylabel("Mass of Water [g]",'Fontsize',17)
+title("Amount of Water in Each State",'Fontsize',22)
+legend("Water Vapor","Water Liquid","Water Total","Water in One Prop Tank",'Fontsize',15)
 
 %Vapor Pressure of NV 7100 (T in K, vp in Pa)
 function vp = nvcVP(T)
