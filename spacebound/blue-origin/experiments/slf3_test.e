@@ -4,15 +4,13 @@
  * Description: Implementation test of FEMTA's flow meter
  * to determine functionality. NOTE - NOT A CALIBRATION TEST.
  *
- * Author: Mark Hartigan
- * Date: November 5, 2020
+ * Author: Vishal Ravi, Gouri Bellad, Mark Hartigan
+ * Date: February 11 2021
  */
 
 define enter start; 
 
-
-
-Sensor slf3_left 100Hz {
+Sensor slf3_left 100Hz { 
   
   [calibrate   | Flow, poly, raw, ml/min | 1 0]
   [conversions | Flow, raw, ml/min]
