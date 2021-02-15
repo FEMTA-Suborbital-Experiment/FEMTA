@@ -1,95 +1,66 @@
 clear
 clc
 close all
-%https://multimedia.3m.com/mws/media/199819O/3m-novec-7200-engineered-fluid-en.pdf
-
-%{
-Created on Tue Feb 09 2020
-    Virtual Environment Simulation of FEMTA propellant management system 
-    for testing of flight computer and verification of experimental
-    process. Simulation accepts flight conditions and returns relevant data
-    for sensor testing under six conditions.
-    
-    1.) From take-off to the point of experiment startup. This data is
-    largely assumed ambient and consists of pressure and temperature. No
-    experimental changes contribute to these values. 
-    Variable condition for this phase: flightCond=1
-    2.) From experiment start to end. There are four possible valve states
-    that make up this condition.
-    Variable condition for this phase: flightCond=2
-        a.) Variable condition for both flow solenoids open and vent 
-            solenoid closed (normal): simCond = 1
-        b.) Variable condition for one flow solenoid open and vent 
-            solenoid closed: simCond = 2
-        c.) Variable condition for both fow solenoids open and vent 
-            solenoid open: simCond = 3
-        d.) Variable condition for one flow solenoid open and vent 
-            solenoid open: simCond = 4
-    3.) From end of experiment through descent to landing. This data is
-    largely assumed ambient and consists of pressure and temperature. No
-    experimental changes contribute to these values. 
-
-@author: Alan J
-@co-author: Daniel Q
-%}
-
-%"tank" suffix denotes propellant tank values
-%"CC" suffix denotes collection chamber values
-%"O" suffix denotes orifice values
-%"pipe" suffix denotes piping network values
+%FLAGS
+pre_exp=1;
+flowSol=2;
+ventSol=0;
 
 %CONSTANT AND INITIAL VALUES
 global R kB N_a;
-R=8.3145;                 %Universal Gas Constant [kJ/kmol-K]
+R=8.3145;                 %Universal Gas Constant [J/mol-K]
 kB=1.380649e-23;          %Boltzmann constant [J/K]
 N_a=6.02214e23;           %Avogadros number [# of particles/mol]
 
 %Air Properties
 gammaAir=1.4;             %ratio of specific heats for air
-MW_Air=29;                %Molecular Weight of Air [kg/kmol]
-R_air=R/MW_Air;           %Specific Gas Constant for Air [kJ/kg-K]
+MW_Air=29;                %Molecular Weight of Air [g/mol]
+R_air=R/MW_Air;           %Specific Gas Constant for Air [J/g-K]
 Cp_Air=1.005;             %Specific Heat of Air [kJ/kg-K]
  
 %Water Properties
+gammaWV=1.33;             %ratio of specific heats for water vapor
 rho_water=997;            %density of liquid water [kg/m^3]
 m_H2O=2.988e-26;          %mass of one water molecule [kg]
-MW_Water=18.0135;         %Molecular weight of water [kg/kmol]
+MW_Water=18.0135;         %Molecular weight of water [g/mol]
+R_wv=R/MW_Water;          %Specific Gas Constant for Water Vapor [J/g-K]
 Cp_water_liquid=4;        %specific heat of liquid water [kJ/kg-K]
 Cp_water_vapor=2;         %specific heat of water vapor [kJ/kg-K]
 Ce_water=1;               %Evaporation Coefficient of water
-Cc_water=0.75;            %Condensation Coefficient of water
+Cc_water=1;               %Condensation Coefficient of water
 
 %HFE Properties
-MW_HFE=250;               %Molecular Weight of HFE [kg/kmol]
-R_HFE=R/MW_HFE;           %Specific Gas Constant for HFE [kJ/kg-K]
+MW_HFE=250;               %Molecular Weight of HFE [g/mol]
+R_HFE=R/MW_HFE;           %Specific Gas Constant for HFE [J/g-K]
 h_evap_HFE=125.6;         %Heat of Vaporization of HFE [kJ/kg]
 Cp_HFEliquid=1.172303;    %Specific Heat of HFE liquid [kJ/kg-K]
 m_HFE=MW_HFE/(N_a*1000);  %mass of one HFE molecule [kg]
 Ce_HFE=1;                 %Evaporation Coefficient of HFE
-Cc_HFE=1;                 %Condensation Coefficient of HFE
+Cc_HFE=0.1;               %Condensation Coefficient of HFE
 
 %Propellant Tank
-P0_tank=101325;                                           %Initial pressure in prop tank [Pa] (1 atm)
-T0_tank=300;                                              %Initial temperature in prop tank [K]
-V_tank=(14e-6)*2;                                         %Total volume of both prop tanks [m^3] (30mL) (CONSTANT)
-volWater0_tank=9.5e-6;                                    %initial volume of water in one prop tank [m^3] (14mL)
-volHFE_liquid0_tank=0.983e-6;                             %initial volume of HFE in both prop tanks [m^3] (10mL)
-volAir0=V_tank-(2*volWater0_tank)-volHFE_liquid0_tank;    %Initial volume of air in both prop tanks [m^3]
-n_Air=(P0_tank*volAir0)/(R*T0_tank);                      %Number of moles of air in both prop tanks (CONSTANT)
-A_HFE=3.167e-5;                                           %Area from which HFE condenses and evaporates [m^2]
+P0_tank=101325;                                         %Initial pressure in prop tank [Pa] (1 atm)
+T0_tank=300;                                            %Initial temperature in prop tank [K]
+V_tank=142.567e-6;                                      %Total volume of both prop tanks [m^3] (142.567mL) (CONSTANT)
+volAir0=0.328e-6;                                       %Initial volume of air in both prop tanks [m^3] (0.328)
+n_Air=(P0_tank*volAir0)/(R*T0_tank);                    %Number of moles of air in both prop tanks (CONSTANT)
+volHFE_liquid0_tank=0.983e-6;                           %initial volume of HFE in both prop tanks [m^3] (0.983mL)
+volWater0_tank=V_tank-volAir0-volHFE_liquid0_tank;      %initial volume of water in both prop tanks [m^3]
+A_HFE=3.167e-5;                                         %Area from which HFE condenses and evaporates [m^2]
 
 %Collection Chamber
-P0_CC=0;                  %initial pressure in collection chamber [Pa]
-T0_CC=310;                %initial temperature in collection chamber [K]
-V_CC=542.248e-6;          %volume of CC [m^3] (227.75mL)
-ventSolenoidDiam=2.18e-3; %Diameter of vent solenoid [m]
+P0_CC=101325;                    %initial pressure in collection chamber [Pa]
+T0_CC=300;                       %initial temperature in collection chamber [K]
+V_CC=542.248e-6;                 %volume of CC [m^3] (542.248mL)
+ventSolenoidDiam=2.18e-3;        %Daimeter of vent solenoid [m]
+CCBeta=ventSolenoidDiam/0.09398; %Ratio of vent solenoid orifice to CC cross section
 
 %Piping network
 D_pipe=(1/8)/39.37;       %Pipe diameter [m] (CONSTANT)
 A=pi*((D_pipe/2)^2);      %Area of pipe cross section [m^2] (CONSTANT)
 
 %Orifice
-D_O=0.000065;             %Orifice diameter [m]
+D_O=0.3e-3;               %Orifice diameter [m]
 A_O=pi*((D_O/2).^2);      %Area of orifice [m^2]
 Beta=D_O/D_pipe;          %Ratio of orifice to pipe diameter
 CD_orifice=0.6;           %discharge coefficient of orifice
@@ -109,10 +80,11 @@ m_HFE_liquid=volHFE_liquid0_tank*nvcRho(T0_tank);  %Initial mass of HFE liquid i
 m_water_vapor=0;                                   %Initial mass of water vapor in CC
 m_water_liquid=0;                                  %Initial mass of water liquid in CC
 n_Gas=n_Air;                                       %Initial moles of gas in tank
-volGas=V_tank-(2*volWater_tank)-volHFE_liquid;     %Initial volume of gas in tank [m^3]
-volWater_shut=0;                                   %Initial volume of water in tank if one flow solenoid does not open [m^3]
+volGas=volAir0;                                    %Initial volume of gas in tank [m^3]
+volWater_shut=0;                                   %Initial volume of water in prop tank when valve shuts [m^3]
+alt=0;                                             %altitude above sea level [m]
 time=0;
-count=1;
+count=1;                           
 dt=1e-3;    %timestep [s]
 
 %ARRAY INITIALIZATION
@@ -122,6 +94,7 @@ tankTempGas_array=[];
 tankTempLiquid_array=[];
 CCVolWater_array=[];
 CCPress_array=[];
+CCPress_preExp_array=[];
 CCTempGas_array=[];
 CCTempLiquid_array=[];
 PvapHFE_array=[];
@@ -144,62 +117,62 @@ volGas_array=[];
 nGas_array=[];
 m_HFE_total_array=[];
 m_water_total_array=[];
-T1_array=[];
-T2_array=[];
-T3_array=[];
+m_water_liquid_tank_array=[];
+nAir_CC_array=[];
+m_water_lost_array=[];
+m_air_lost_array=[];
+m_lost_array=[];
+nWaterVapor_CC_array=[];
 
-%COMPUTER SYSTEM STATUS INPUT
-%The Sim Box will generate the conditions under which the experiment will
-%operate. There are six possible conditions.
-%
-%Pre-Experiment; ascending to zero-g: flightCond = 1
-%During Experiment: flightCond = 2
-%   Both flow solenoids open and vent solenoid closed (normal): simCond = 1
-%   One flow solenoid open and vent solenoid closed: simCond = 2
-%   Both fow solenoids open and vent solenoid open: simCond = 3
-%   One flow solenoid open and vent solenoid open: simCond = 4
-%Post-Experiment; descending to landing: flightCond = 3
-flightCond=2;
-simCond=1;
+%EXECUTABLE LOOPS
+%Pressure in Collection Chamber pre-experiment
+count1=1;
+while alt<2e6
+    [ambientT,ambientP,ambientRho]=StandardAtm(alt);
+    %Pstar=CCPress*((2/(gammaAir+1))^(gammaAir/(gammaAir-1)));
+    ventA=pi*((ventSolenoidDiam/2)^2);
+    M=sqrt((((CCPress/ambientP)^((gammaAir-1)/gammaAir))-1)*(2/(gammaAir-1)));
+    %mdot=((ventA*ambientP)/sqrt(ambientT))*(sqrt(gammaAir/R_air))*M*((1+(((gammaAir-1)/2)*(M^2)))^(-(gammaAir+1)/(2*(gammaAir-1))));
+    mdot=mDotThruOrifice(ambientP,CCPress,ambientRho,1.4,1,ventSolenoidDiam);
+    airVol_flow=mdot/ambientRho;
+    Y=1-(0.351+(0.256*(CCBeta^4))+(0.93*(CCBeta^8)))*(1-((ambientP/CCPress)^(1/gammaAir)));
+    delP=PressLossThruOrifice(ambientRho,CCBeta,airVol_flow,1,ventA,Y);
+    CCPress=CCPress-delP;
+    alt=alt+10;
+    count1=count1+1;
+    if pre_exp==1
+        CCPress_preExp_array(count1)=CCPress;
+    end
+end
 
-%EXECUTABLE LOOP
-if flightCond==1
-elseif flightCond==2
-    while volWater_tank>0
-        
-        %Condition if solenoid valve shuts mid experiment
-        if (simCond==2 || simCond==4) && (volWater_shut < volWater_tank)
-            volWater_shut=volWater_tank;
+CCPressAir=CCPress;
+
+%Experiment Loop
+while volWater_tank-volWater_shut>0
+    
+        if flowSol==1 && volWater_shut==0
+            volWater_shut=0.5*volWater_tank;
+        elseif flowSol==2 && volWater_shut~=0
+            volWater_shut=0;
         end
 
         %Volumetric Flow Rate of Liquid Water Propellant through one orifice[m^3/s] 
-        flo_water=CD_orifice*A_O*sqrt(2*(tankPress-CCPress)/(rho_water*(1-(Beta^4))));
-
-        %Volume lost through vent orifice if open [m^3] (assuming only water
-        %vapor lost through vent solenoid)
-        if m_water_vapor~=0
-            wvRho=m_water_vapor/(V_CC-volWater_CC);
-            m_lost=mDotThruOrifice(CCPress,0.000001,wvRho,1.33,1,ventSolenoidDiam)*dt;
-            vol_lost=m_lost/wvRho;
-        else
-            vol_lost=0;
+        flo_water=flowSol*CD_orifice*A_O*sqrt(2*(tankPress-CCPress)/(rho_water*(1-(Beta^4))));
+        
+        if ~isreal(flo_water)
+            break
         end
+        
+        %Moles of air in CC and Partial Pressure
+        nAir_CC=((CCPressAir*(V_CC-volWater_CC))/(R*CCTempGas));
+        nWaterVapor_CC=(m_water_vapor*1000)/MW_Water;
+        xAir_CC=nAir_CC/(nAir_CC+nWaterVapor_CC);
+        CCPressAir=CCPress*xAir_CC;
 
         %Update of Liquid Water Propellant Volumes in Tank & CC [m^3]
         volWater_tank=volWater_tank-(flo_water*dt);
-        if simCond==1
-            volWater_CC=volWater_CC+(2*flo_water*dt);
-        elseif simCond==2
-            volWater_CC=volWater_CC+(flo_water*dt);
-        elseif simCond==3
-            volWater_CC=volWater_CC+(2*flo_water*dt)-vol_lost;
-        elseif simCond==4
-            volWater_CC=volWater_CC+(flo_water*dt)-vol_lost;
-        else
-            fprintf("\nError: Invalid Sim Condition\n\n")
-            break
-        end
-
+        volWater_CC=volWater_CC+(flo_water*dt);
+        m_water_liquid_tank=volWater_tank*rho_water;
 
         %PROPELLANT TANK
             %Vapor Pressure of HFE [Pa]
@@ -236,15 +209,11 @@ elseif flightCond==2
 
             %Update moles/volume of HFE vapor/liquid 
             vol_HFE_liquid=m_HFE_liquid/rho_HFE;
-            n_HFE_vapor=m_HFE_vapor/MW_HFE;
+            n_HFE_vapor=(m_HFE_vapor*1000)/MW_HFE;
 
             %Update total amount of Gas (Air + HFE)
             n_Gas=n_HFE_vapor+n_Air;
-            if simCond==1 || simCond==3
-                volGas=V_tank-(2*volWater_tank)-vol_HFE_liquid;
-            else
-                volGas=V_tank-(volWater_shut+volWater_tank)-vol_HFE_liquid;
-            end
+            volGas=V_tank-volWater_tank-vol_HFE_liquid;
 
             %Temperatrue Update [K]
             Q_HFE=m_HFE_transfer*h_evap_HFE;
@@ -275,9 +244,22 @@ elseif flightCond==2
             if (CCPress>Pvap_water && m_water_transfer>0) || (m_water_vapor==0 && m_water_transfer<0) || (m_water_liquid==0 && m_water_transfer>0)
                 m_water_transfer=0;
             end
+            
+            %Mass of gas lost through vent solenoid if open during experiment [kg]
+            rhoGas_CC=(((nAir_CC*MW_Air)/1000)+((nWaterVapor_CC*MW_Water)/1000))/(V_CC-(m_water_liquid/rho_water));
+            xWaterVapor_CC=nWaterVapor_CC/(nWaterVapor_CC+nAir_CC);
+            gammaGas_CC=1+(1/((xWaterVapor_CC/(gammaWV-1))+(xAir_CC/(gammaAir-1))));
+            m_lost=mDotThruOrifice(CCPress,ambientP,rhoGas_CC,gammaGas_CC,1,ventSolenoidDiam*ventSol)*dt;
+            if m_lost<0
+                m_water_lost=0;
+                m_air_lost=m_lost;
+            else
+                m_water_lost=m_lost*xWaterVapor_CC;
+                m_air_lost=m_lost*xAir_CC;
+            end
 
             %Total mass of water vapor and liquid at current time [kg]
-            m_water_vapor=m_water_transfer+m_water_vapor;
+            m_water_vapor=m_water_transfer-m_water_lost+m_water_vapor;
             m_water_liquid=(volWater_CC*rho_water)-m_water_vapor;
 
             %Mass of Vapor and Liquid is zero if negative
@@ -286,12 +268,9 @@ elseif flightCond==2
             elseif m_water_vapor<0
                 m_water_vapor=0;
             end
-
-            %Total number of moles of water vapor
-            n_water_vapor=m_water_vapor/MW_Water;
-
+            
             %Pressure Update [Pa]
-            CCPress=(n_water_vapor*R*CCTempGas)/(V_CC-volWater_CC);
+            CCPress=((nAir_CC+nWaterVapor_CC)*R*CCTempGas)/(V_CC-(m_water_liquid/rho_water));
 
             %Temperature Update [K]
             Q_water=m_water_transfer*h_evap_water;
@@ -301,24 +280,11 @@ elseif flightCond==2
             T3=-Q_water/(m_water_liquid*Cp_water_liquid);
             H2=mwn*Cp_water_liquid*300;
             H_total=H2-Q_water;
-            if CCTempLiquid>273
-                %CCTempLiquid=(H_total/(m_water_liquid*Cp_water_liquid))+CCTempLiquid;
-                CCTempLiquid=T1+T2+T3;
-            else
-                %CCTempLiquid=(H_total/(mwn*dt*Cp_water_liquid))+CCTempLiquid;
-                %CCTempLiquid=T2+CCTempLiquid;
-            end
-            
+            CCTempLiquid=T1+T2+T3;
             %Tw = mwi/(mwi+mwn)*Twi + mwn/(mwi+mwn)*Twn - Q/(mwi+mwn)*Cp
 
-
-
         %Update total mass of water in the system [kg]
-        if simCond==1 || simCond==3
-            m_water_total=m_water_vapor+m_water_liquid+(2*volWater_tank*rho_water);
-        else
-            m_water_total=m_water_vapor+m_water_liquid+((volWater_shut+volWater_tank)*rho_water);
-        end
+        m_water_total=m_water_vapor+m_water_liquid+(volWater_tank*rho_water);
 
         %ARRAY UPDATE
             %Propellant Tank
@@ -334,6 +300,7 @@ elseif flightCond==2
             volGas_array(count)=volGas;
             nGas_array(count)=n_Gas;
             m_HFE_total_array(count)=m_HFE_total;
+            m_water_liquid_tank_array(count)=m_water_liquid_tank;
 
             %Collection Chamber
             CCVolWater_array(count)=volWater_CC;
@@ -349,6 +316,11 @@ elseif flightCond==2
             T1_array(count)=T1;
             T2_array(count)=H2;
             T3_array(count)=H_total;
+            nAir_CC_array(count)=nAir_CC;
+            m_water_lost_array(count)=m_water_lost;
+            %m_air_lost_array(count)=m_air_lost;
+            m_lost_array(count)=m_lost;
+            nWaterVapor_CC_array(count)=nWaterVapor_CC;
 
             %Miscellaneous
             PvapHFE_array(count)=Pvap_HFE;
@@ -360,17 +332,12 @@ elseif flightCond==2
 
             time=time+dt;
             count=count+1; 
-
-            %Test Condition
-%             if time>75.4030
-%                 simCond=1;
-%             end
-    end
-elseif flightCond==3
-else
-    fprintf("\nError: Invalid Flight Condition\n\n")
+            
+            if time>50
+                flowSol=2;
+            end
 end
-
+    
 %Data manipulation
 time_array=time_array';
 m_water_total_array=m_water_total_array';
@@ -403,6 +370,12 @@ m_HFE_transfer_array=m_HFE_transfer_array';
 T1_array=T1_array';
 T2_array=T2_array';
 T3_array=T3_array';
+CCPress_preExp_array=CCPress_preExp_array';
+m_water_liquid_tank_array=m_water_liquid_tank_array';
+nAir_CC_array=nAir_CC_array';
+m_water_lost_array=m_water_lost_array';
+m_lost_array=m_lost_array';
+nWaterVapor_CC_array=nWaterVapor_CC_array';
 
 
 %Plots
@@ -412,7 +385,7 @@ hold on
 plot(time_array,CCVolWater_array*10^6,'Linewidth',3)
 xlabel("Time [s]",'Fontsize',17)
 ylabel("Volume of Water in Prop Tank and CC [mL]",'Fontsize',17)
-legend("One Prop Tank","CC",'Fontsize',15)
+legend("Prop Tank","CC",'Fontsize',15)
 title("Volumes of Collection Chamber and Propellant Tank",'Fontsize',22)
 
 figure(2)
@@ -423,8 +396,8 @@ plot(time_array,CCTempLiquid_array)
 plot(time_array,tankTempLiquid_array)
 xlabel("time [s]",'Fontsize',17)
 ylabel("Temperature [K]",'Fontsize',17)
-legend("Temp of gas in tank","Temp of gas in CC","temp of liquid in CC","Temp of liquid in tank",'Fontsize',17)
-title("Temperature values for Duration of Experiment",'Fontsize',22)
+legend("Temp of HFE vapor in Tank","Temp of Water Vapor in CC","Temp of Liquid Water in CC","Temp of Liquid HFE in Tank",'Fontsize',12)
+title("Temperature Values for Duration of Experiment",'Fontsize',22)
 
 figure(3)
 plot(time_array,tankPress_array/1000,'Linewidth',3)
@@ -464,13 +437,6 @@ xlabel("Time [s]")
 ylabel("Mass of Water [g]")
 title("Amount of Water in Each State")
 legend("Water Vapor","Water Liquid","Water Total","Water in One Prop Tank")
-
-figure(7)
-% plot(time_array,T1_array)
-% hold on
-% plot(time_array,T2_array)
-plot(time_array,T3_array)
-legend("Temp Contribution from water in tank","Temp Contribution from new water","Temp Contribution from evaporation")
 
 %Vapor Pressure of NV 7100 (T in K, vp in Pa)
 function vp = nvcVP(T)
@@ -560,3 +526,55 @@ function [mDot] = mDotThruOrifice(in1,in2,in3,in4,in5,in6)
     mDot = mDot * directionSign; %Corrects sign on mDot to follow stated convention above
 end
 
+%Outputs temperature [K], Pressure [Pa], and density [kg/m^3] given an altitude  
+function [T, p, rho] = StandardAtm(h)
+    
+    rho_sea = 1.2250;     % density at sea level, kg/ m^3
+    p_sea   = 1.01325E5;  % pressure at sea level, N/m^2
+    R       = 287;        % gas constant, J/kg/K
+    g_zero  = 9.81;       % gravitatoinal acceleration, m/s^2
+
+    T_set   = [288.16,216.66,216.66,282.66,282.66,165.66,165.66,225.66]; % list of temperature points that define endpoints of each layer (starting at the ground), K
+    h_set   = [0,11000,25000,47000,53000,79000,90000,105000]; %list of altitude points that define endpoints of each layer (starting at the ground), m
+    a_set   = [-6.5*10^-3,0,3*10^-3,0,-4.5*10^-3,0,4*10^-3];%list of gradient layer slopes (starting at the ground), K/m
+    p_set   = [p_sea, 2.27e4, 2.5273e3, 1.2558e2, 61.493, 1.2595, 0.162723]; % list of pressure at each layer endpoint, N/m^2
+    rho_set = [rho_sea, 3.648e-1, 4.0639e-2, 1.5535e-3, 7.5791e-4, 2.184e-5, 1.84114e-6]; % list of density at each layer endpoint, kg/m^3
+            
+    if h <= h_set(2)
+        layer = 1;
+    elseif h <= h_set(3)
+        layer = 2;
+    elseif h <= h_set(4)
+        layer = 3;
+    elseif h <= h_set(5)
+        layer = 4;
+    elseif h <= h_set(6)
+        layer = 5;
+    elseif h <= h_set(7)
+        layer = 6;
+    %elseif h <= h_set(8)
+    else
+        layer = 7;
+    end
+    
+    
+    if mod(layer, 2) == 1
+        %Gradient layer
+        T = T_set(layer) + (a_set(layer) * (h - h_set(layer))); % temperature equation for gradient layer, K
+        p = p_set(layer) * ((T / T_set(layer)) ^ (-g_zero / (a_set(layer) * R))); % pressure equation for gradient layer, N/m^2
+        rho = rho_set(layer)* ((T / T_set(layer))^((-g_zero / (a_set(layer)*R))+1)); % density equation for gradient layer, kg/m^3
+        
+    else
+        %Isothermal layers
+        T = T_set(layer); % temperature for isothermal layer, K
+        p = p_set(layer) * exp((-g_zero * (h - h_set(layer))) / (R * T)); % pressure equation for isothermal layer, N/m^2
+        rho = (p * rho_set(layer)) / p_set(layer); % density equation for isothermal layer, kg/m^3
+    end
+    
+end
+
+%Pressure Loss through on Orifice [Pa]
+function delP=PressLossThruOrifice(rho,Beta,dvdt,Cd,AO,Y)
+    delP=0.5*rho*(1-(Beta.^4)).*((dvdt./(Cd*AO*Y)).^2);
+end
+       
