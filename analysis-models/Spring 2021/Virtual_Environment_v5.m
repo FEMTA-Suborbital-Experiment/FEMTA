@@ -2,8 +2,8 @@ clear
 clc
 close all
 
-load('altitude.mat');
-load('time.mat');
+load('altitude2.mat');
+load('time2.mat');
 
 %CONSTANT AND INITIAL VALUES
 global R kB N_a;
@@ -26,7 +26,7 @@ R_wv=R/MW_Water;          %Specific Gas Constant for Water Vapor [J/g-K]
 Cp_water_liquid=4;        %specific heat of liquid water [kJ/kg-K]
 Cp_water_vapor=2;         %specific heat of water vapor [kJ/kg-K]
 Ce_water=1;               %Evaporation Coefficient of water
-Cc_water=0.75;             %Condensation Coefficient of water
+Cc_water=0.75;            %Condensation Coefficient of water
 
 %HFE Properties
 MW_HFE=250;               %Molecular Weight of HFE [g/mol]
@@ -35,7 +35,7 @@ h_evap_HFE=125.6;         %Heat of Vaporization of HFE [kJ/kg]
 Cp_HFEliquid=1.172303;    %Specific Heat of HFE liquid [kJ/kg-K]
 m_HFE=MW_HFE/(N_a*1000);  %mass of one HFE molecule [kg]
 Ce_HFE=1;                 %Evaporation Coefficient of HFE
-Cc_HFE=0.1;                 %Condensation Coefficient of HFE
+Cc_HFE=0.1;               %Condensation Coefficient of HFE
 
 %Propellant Tank
 P0_tank=101325;                                         %Initial pressure in prop tank [Pa] (1 atm)
@@ -50,7 +50,7 @@ A_HFE=3.167e-5;                                         %Area from which HFE con
 %Collection Chamber
 P0_CC=101325;                    %initial pressure in collection chamber [Pa]
 T0_CC=300;                       %initial temperature in collection chamber [K]
-V_CC=542.248e-6;                 %volume of CC [m^3] (542.248mL)
+V_CC=334.519e-6;                 %volume of CC [m^3] (542.248mL)
 ventSolenoidDiam=2.18e-3;        %Daimeter of vent solenoid [m]
 CCBeta=ventSolenoidDiam/0.09398; %Ratio of vent solenoid orifice to CC cross section
 nAir_CC=(P0_CC*V_CC)/(R*T0_CC);  %Initial number of moles of air in CC
@@ -144,7 +144,7 @@ while time<max(t)
         end
         
         %Condition for beginning experiment
-        if alt<85000
+        if alt<80000
             ventSol=1;
             flowSol=0;
         else
@@ -163,7 +163,10 @@ while time<max(t)
         end
 
         %Volumetric Flow Rate of Liquid Water Propellant through one orifice[m^3/s]
-        flo_water=flowSol*CD_orifice*A_O*sqrt(2*(tankPress-CCPress)/(rho_water*(1-(Beta^4))));
+        flo_water=flowSol*CD_orifice*A_O*sqrt(2*(max(tankPress,CCPress)-min(tankPress,CCPress))/(rho_water*(1-(Beta^4))));
+        if tankPress<CCPress
+            flo_water=flo_water*-1;
+        end
 
         
         if ~isreal(flo_water) || isnan(flo_water)
