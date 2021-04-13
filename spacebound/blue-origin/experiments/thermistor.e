@@ -6,7 +6,7 @@
  * to determine functionality. NOTE - NOT A CALIBRATION TEST.
  *
  * Author: Vishal Ravi, Gouri Bellad, Mark Hartigan
- * Date: February 25 2021
+ * Date: April 10 2021
  */
  
 define enter start;
@@ -22,29 +22,29 @@ Sensor ad15_vcc 1Hz { //vcc is placeholder adc. thermistors may be connected to 
   -.000004,
    .0023,
   -.1077,
-  1.9093 ]  //placeholder calibration curve, get from electronics, simbox electronics, or simbox software
+  1.9093 ];  //placeholder calibration curve, get from electronics, simbox electronics, or simbox software
  [conversions | thermistor1, raw, V, C    | 1 0
- ]
+ ];
  
  [calibrate   | thermistor2, poly, raw, V | -.00002,
   .0023,
  -.106,
  2.003
-]
- [conversions | thermistor2, raw, V, C    | 1 0]
+];
+ [conversions | thermistor2, raw, V, C    | 1 0];
  
  [calibrate   | thermistor3, poly, raw, V | -.00002,
   .0024,
  -.1074,
- 1.9844 ]
- [conversions | thermistor3, raw, V, C    | 1 0 ]
+ 1.9844 ];
+ [conversions | thermistor3, raw, V, C    | 1 0 ];
  
  
 [calibrate   | thermistor4, poly, raw, V | -.00002,
  .0025,
 -.1009,
-1.828 ]
-[conversions | thermistor4, raw, V, C    | 1 0 ]
+1.828 ];
+[conversions | thermistor4, raw, V, C    | 1 0 ];
  
  
  // options are Flow, Temperature, or Bubble
@@ -67,26 +67,26 @@ Sensor ad15_sda 1Hz {
  [calibrate   | thermistor5, poly, raw, V | -.00002,
   .0025,
  -.1003,
- 1.8398 ]
-[conversions | thermistor5, raw, V, C    | 1 0 ]
+ 1.8398 ];
+[conversions | thermistor5, raw, V, C    | 1 0 ];
  
  [calibrate   | thermistor6, poly, raw, V | -.0001,
   .0022,
  -.1076,
- 2.0743 ]
- [conversions | thermistor6, raw, V, C    | 1 0 ]
+ 2.0743 ];
+ [conversions | thermistor6, raw, V, C    | 1 0 ];
  
  [calibrate   | thermistor7, poly, raw, V | -.00002,
   .0025,
  -.1031,
- 1.8698 ]
- [conversions | thermistor7, raw, V, C    | 1 0 ]
+ 1.8698 ];
+ [conversions | thermistor7, raw, V, C    | 1 0 ];
  
  [calibrate   | thermistor8, poly, raw, V | -.00002,
   .0024,
  -.106,
- 1.9608 ]
- [conversions | thermistor8, raw, V, C    | 1 0 ]
+ 1.9608 ];
+ [conversions | thermistor8, raw, V, C    | 1 0 ];
  
   // options are Flow, Temperature, or Bubble
   [print | red, thermistor5 | 1 ];
@@ -104,27 +104,27 @@ where A3 is thermistor12
  [calibrate   | thermistor9, poly, raw, V | -.00002,
   .0023,
  -.1048,
- 1.9794 ]
- [conversions | thermistor9, raw, V, C    | 1 0 ]
+ 1.9794 ];
+ [conversions | thermistor9, raw, V, C    | 1 0 ];
  
   [calibrate   | thermistor10, poly, raw, V | -.00002,
    .0023,
   -.1065,
-  2.0187 ]
- [conversions | thermistor10, raw, V, C    | 1 0 ]
+  2.0187 ];
+ [conversions | thermistor10, raw, V, C    | 1 0 ];
  
   [calibrate   | thermistor11, poly, raw, V | -.00002,
    .0022,
   -.1075,
-  2.0676 ]
- [conversions | thermistor11, raw, V, C    | 1 0]
+  2.0676 ];
+ [conversions | thermistor11, raw, V, C    | 1 0];
  
  
   [calibrate   | thermistor12, poly, raw, V | -.00002,
    .0023,
   -.1009,
-  1.9147 ]
- [conversions | thermistor12, raw, V, C    | 1 0 ]
+  1.9147 ];
+ [conversions | thermistor12, raw, V, C    | 1 0 ];
  
  
   // options are Flow, Temperature, or Bubble
