@@ -2,10 +2,10 @@
 /*
  * Vishay NTCASCWE3 Test
  *
- * Description: Implementation test of FEMTA's thermistor
+ * @Description: Implementation test of FEMTA's thermistor
  * to determine functionality. NOTE - NOT A CALIBRATION TEST.
  *
- * Author: Vishal Ravi, Gouri Bellad, Mark Hartigan
+ * @Authors Vishal Ravi, Gouri Bellad, Mark Hartigan
  * Date: April 10 2021
  */
  
