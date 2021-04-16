@@ -11,40 +11,42 @@
  
 define enter start;
  
-Sensor ad15_vcc 1Hz { //vcc is placeholder adc. thermistors may be connected to different adc
+Sensor ad15_vdd 1Hz { //vcc is placeholder adc. thermistors may be connected to different adc
  
- where A0 is thermistor1 //thermistors may be connected to different ports A0-A3 for this adc or they might be spread out among other adcs
- where A1 is thermistor2
- where A2 is thermistor3
- where A3 is thermistor4
+ where A0 is thermistor1; //thermistors may be connected to different ports A0-A3 for this adc or they might be spread out among other adcs
+ where A1 is thermistor2;
+ where A2 is thermistor3;
+ where A3 is thermistor4;
  
- [calibrate   | thermistor1, poly, raw, V | -.0000003,
-  -.000004,
-   .0023,
-  -.1077,
+ [calibrate   | thermistor1, poly, V, C | -0.0000003,
+  -0.000004,
+   0.0023,
+  -0.1077,
   1.9093 ];  //placeholder calibration curve, get from electronics, simbox electronics, or simbox software
- [conversions | thermistor1, raw, V, C    | 1 0
- ];
+ [calibrate   | thermistor1, poly, raw, V | 0.00041234314, -0.00198277794];
+ [conversions | thermistor1, raw, V, C | ];
  
- [calibrate   | thermistor2, poly, raw, V | -.00002,
-  .0023,
- -.106,
- 2.003
-];
- [conversions | thermistor2, raw, V, C    | 1 0];
+ [calibrate   | thermistor2, poly, V, C | -0.00002,
+  0.0023,
+ -0.106,
+ 2.003];
+ [calibrate   | thermistor2, poly, raw, V | 0.00041234314, -0.00198277794];
+ [conversions | thermistor2, raw, V, C    | ];
  
- [calibrate   | thermistor3, poly, raw, V | -.00002,
-  .0024,
- -.1074,
+ [calibrate   | thermistor3, poly, V, C | -0.00002,
+  0.0024,
+ -0.1074,
  1.9844 ];
- [conversions | thermistor3, raw, V, C    | 1 0 ];
+ [calibrate   | thermistor3, poly, raw, V | 0.00041234314, -0.00198277794];
+ [conversions | thermistor3, raw, V, C    | ];
  
  
-[calibrate   | thermistor4, poly, raw, V | -.00002,
- .0025,
--.1009,
+[calibrate   | thermistor4, poly, V, C | -0.00002,
+ 0.0025,
+-0.1009,
 1.828 ];
-[conversions | thermistor4, raw, V, C    | 1 0 ];
+[calibrate   | thermistor4, poly, raw, V | 0.00041234314, -0.00198277794];
+[conversions | thermistor4, raw, V, C    | ];
  
  
  // options are Flow, Temperature, or Bubble
@@ -64,29 +66,33 @@ Sensor ad15_sda 1Hz {
  Where A2 is thermistor7
  where A3 is thermistor8
  
- [calibrate   | thermistor5, poly, raw, V | -.00002,
-  .0025,
- -.1003,
+ [calibrate   | thermistor5, poly, V, C | -0.00002,
+  0.0025,
+ -0.1003,
  1.8398 ];
-[conversions | thermistor5, raw, V, C    | 1 0 ];
+[calibrate   | thermistor5, poly, raw, V | 0.00041234314, -0.00198277794];
+[conversions | thermistor5, raw, V, C    | ];
  
- [calibrate   | thermistor6, poly, raw, V | -.0001,
-  .0022,
- -.1076,
+ [calibrate   | thermistor6, poly, V, C | -0.0001,
+  0.0022,
+ -0.1076,
  2.0743 ];
- [conversions | thermistor6, raw, V, C    | 1 0 ];
+ [calibrate   | thermistor6, poly, raw, V | 0.00041234314, -0.00198277794];
+ [conversions | thermistor6, raw, V, C    | ];
  
- [calibrate   | thermistor7, poly, raw, V | -.00002,
-  .0025,
- -.1031,
+ [calibrate   | thermistor7, poly, V, C | -0.00002,
+  0.0025,
+ -0.1031,
  1.8698 ];
- [conversions | thermistor7, raw, V, C    | 1 0 ];
+ [calibrate   | thermistor7, poly, raw, V | 0.00041234314, -0.00198277794];
+ [conversions | thermistor7, raw, V, C    | ];
  
- [calibrate   | thermistor8, poly, raw, V | -.00002,
-  .0024,
- -.106,
+ [calibrate   | thermistor8, poly, V, C | -0.00002,
+  0.0024,
+ -0.106,
  1.9608 ];
- [conversions | thermistor8, raw, V, C    | 1 0 ];
+ [calibrate   | thermistor8, poly, raw, V | 0.00041234314, -0.00198277794];
+ [conversions | thermistor8, raw, V, C    | ];
  
   // options are Flow, Temperature, or Bubble
   [print | red, thermistor5 | 1 ];
@@ -95,36 +101,40 @@ Sensor ad15_sda 1Hz {
   [print | red, thermistor8 | 1 ];
 }
  
-Sensor ad15_vdd 1Hz {
+Sensor ad15_gnd 1Hz {
 where A0 is thermistor9 //thermistors may be connected to different ports A0-A3 for this adc or they might be spread out among other adcs
 where A1 is thermistor10
 where A2 is thermistor11
 where A3 is thermistor12
  
- [calibrate   | thermistor9, poly, raw, V | -.00002,
-  .0023,
- -.1048,
+ [calibrate   | thermistor9, poly, V, C | -0.00002,
+  0.0023,
+ -0.1048,
  1.9794 ];
- [conversions | thermistor9, raw, V, C    | 1 0 ];
+ [calibrate   | thermistor9, poly, raw, V | 0.00041234314, -0.00198277794];
+ [conversions | thermistor9, raw, V, C    | ];
  
-  [calibrate   | thermistor10, poly, raw, V | -.00002,
-   .0023,
-  -.1065,
+  [calibrate   | thermistor10, poly, V, C | -0.00002,
+   0.0023,
+  -0.1065,
   2.0187 ];
- [conversions | thermistor10, raw, V, C    | 1 0 ];
+ [calibrate   | thermistor10, poly, raw, V | 0.00041234314, -0.00198277794];
+ [conversions | thermistor10, raw, V, C    | ];
  
-  [calibrate   | thermistor11, poly, raw, V | -.00002,
-   .0022,
-  -.1075,
+  [calibrate   | thermistor11, poly, V, C | -0.00002,
+   0.0022,
+  -0.1075,
   2.0676 ];
- [conversions | thermistor11, raw, V, C    | 1 0];
+ [calibrate   | thermistor11, poly, raw, V | 0.00041234314, -0.00198277794];
+ [conversions | thermistor11, raw, V, C    | ];
  
  
-  [calibrate   | thermistor12, poly, raw, V | -.00002,
-   .0023,
-  -.1009,
+  [calibrate   | thermistor12, poly, V, C | -0.00002,
+   0.0023,
+  -0.1009,
   1.9147 ];
- [conversions | thermistor12, raw, V, C    | 1 0 ];
+ [calibrate   | thermistor12, poly, raw, V | 0.00041234314, -0.00198277794];
+ [conversions | thermistor12, raw, V, C    | ];
  
  
   // options are Flow, Temperature, or Bubble
@@ -133,7 +143,8 @@ where A3 is thermistor12
   [print | red, thermistor11 | 1 ];
   [print | red, thermistor12 | 1 ];
 }
- ds32 1Hz {
+
+Sensor ds32 1Hz {
   [calibrate   | Time, poly, raw, s | 0.0009765625, 0.0]
   [conversions | Time, raw, s       |                  ]
 }
