@@ -100,7 +100,7 @@ Sensor ad15_sda 1 Hz {
   [print | red, thermistor8 | 1 ];
 }
 
-Sensor ad15_vdd 1H {
+Sensor ad15_scl 1H {
 where A0 is thermistor9 //thermistors may be connected to different ports A0-A3 for this adc or they might be spread out among other adcs
 where A1 is thermistor10
 where A2 is thermistor11
