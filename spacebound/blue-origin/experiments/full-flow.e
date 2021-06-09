@@ -72,14 +72,14 @@ Sensor ad15_vdd 5Hz {
     // set pin 21 neg after 350ms;
 
     // open the vent valve
-    set pin 17 pos;
-    set pin  4 neg;
-    set pin 17 neg after 350ms;
+    set pin 14 pos;
+    set pin 15 neg;
+    set pin 14 neg after 350ms;
 
     // close solenoid
-    set pin 19 pos;
-    set pin 26 neg;
-    set pin 19 neg after 350ms;
+    set pin 16 pos;
+    set pin 12 neg;
+    set pin 16 neg after 350ms;
 
     leave start;
     enter ascent after 1s;
@@ -87,14 +87,14 @@ Sensor ad15_vdd 5Hz {
 
   if (State ascent | collection < 27kPa) {
     // close the vent valve
-    set pin  4 pos;
-    set pin 17 neg;
-    set pin  4 neg after 350ms;
+    set pin 15 pos;
+    set pin 14 neg;
+    set pin 15 neg after 350ms;
 
     // open solenoid after 2 seconds
-    set pin 26 pos after 2000ms;
-    set pin 19 neg after 2000ms;
-    set pin 26 neg after 2350ms;
+    set pin 12 pos after 2000ms;
+    set pin 16 neg after 2000ms;
+    set pin 12 neg after 2350ms;
 
     leave ascent;
     enter test after 30s;  // end test after a half minute
@@ -102,9 +102,9 @@ Sensor ad15_vdd 5Hz {
 
   if (State test | collection > 0kPa) {
     // close solenoid
-    set pin 19 pos;
-    set pin 26 neg;
-    set pin 19 neg after 350ms;
+    set pin 16 pos;
+    set pin 12 neg;
+    set pin 16 neg after 350ms;
 
     leave test;
     enter descent after 1s;
