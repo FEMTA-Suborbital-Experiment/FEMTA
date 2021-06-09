@@ -16,7 +16,6 @@ define leave descent;
 Sensor ds32 1Hz {
   [calibrate   | Time, poly, raw, s | 0.0009765625, 0.0];
   [conversions | Time, raw, s       |                  ];
-  [print       | white, Time        | 1                ];
 }
 
 
