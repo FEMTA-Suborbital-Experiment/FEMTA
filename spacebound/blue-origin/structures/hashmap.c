@@ -1,234 +1,147 @@
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+#include "../include/program.h"
 
-#include "list.h"
-#include "hashmap.h"
-
-#include "../system/error.h"
-#include "../types/types.h"
-
-Hashmap * hashmap_create(hash_function hash, key_comparator key_diff, element_freer freer, int expected_size) {
-  // Creates a hashmap with starting size as a function of expectations
+Hashmap * hashmap_create(hash_function hash, key_comparator key_diff, freer key_free, freer value_free, int size) {
   
-  Hashmap * map = malloc(sizeof(Hashmap));
+  Hashmap * map = calloc(1, sizeof(*map));
   
-  map -> elements = 0;
-  map -> size = expected_size * 2;
+  map -> size       = size;
+  map -> hash       = hash;
+  map -> key_diff   = key_diff;
+  map -> key_free   = key_free;
+  map -> value_free = value_free;
   
-  map -> hash = hash;
-  map -> key_diff = key_diff;
-  map -> free = freer;
-  
-  map -> table = malloc(map -> size * sizeof(List **));
+  map -> table = calloc(map -> size, sizeof(*map -> table));
   map -> all   = list_create();
   map -> keys  = list_create();
-  
-  // Create table of linked lists
-  for (int i = 0; i < map -> size; i++)
-    map -> table[i] = NULL;
   
   return map;
 }
 
-void key_free(void * element) {
-  free(((HashmapElement *) element) -> key);
-  free(element);
-}
-
-int hash_string(void * string, int upper_bound) {
-  // Hashes a string into a range using java's algorithm
-  // h(x) has been chosen to minimize collisions
-  // Note, hx will overflow but this is no problem
+void * hashmap_delete(Hashmap * map) {
+  // completely deletes a hashmap, deleting all content in the process
   
-  int hx = 0;
-  for (int i = 0; i < strlen((char *) string); i++) {
-    hx = hx * 31 + ((char *) string)[i];
+  for (int i = 0; i < map -> size; i++) {
+    
+    if (map -> table[i]) {
+      
+      for (iterate(map -> table[i], HashmapElement *, element)) {
+        if (map ->   key_free)(map ->   key_free)(element -> key  );
+        if (map -> value_free)(map -> value_free)(element -> value);
+      }
+      
+      map -> table[i] = list_delete(map -> table[i]);
+    }
   }
   
-  return (int) ((u32) abs(hx) % (u32) upper_bound);    // abs can be negative
+  map -> all  = list_delete(map -> all );    // these don't need a value_free
+  map -> keys = list_delete(map -> keys);    // -----------------------------
+  
+  blank(map -> table);
+  free(map);
+  return NULL;
 }
 
-
-int hash_address(void * address, int upper_bound) {
-  // Hashes an address into a range
-  // I found this specific 32-bit hashing function on Stack Overflow
+void hashmap_add(Hashmap * map, void * key, void * value) {
+  // adds an element to the hashmap. (assumes value doesn't already exist).
   
-  int hx = (int) ((long) address);
+  int hx = (map -> hash)(key, map -> size);
+  
+  HashmapElement * element = malloc(sizeof(*element));
+  element -> key   = key;
+  element -> value = value;
+  
+  if (!map -> table[hx])
+    map -> table[hx] = list_that_frees(free);        // will free the container element
+  
+  list_insert(map -> table[hx], element);            // add to table row
+  list_insert(map -> all, value);                    // add to list of entries
+  list_insert(map -> keys, key);                     // add to list of keys
+  
+  map -> elements++;
+}
 
-  hx = ((hx >> 16) ^ hx) * 0x119de1f3;
-  hx = ((hx >> 16) ^ hx) * 0x119de1f3;
-  hx = ((hx >> 16) ^ hx);
+local HashmapElement * hashmap_find(Hashmap * map, void * key) {
+  // finds the element containing the key value pair.
+  
+  int hx = (map -> hash)(key, map -> size);
+  
+  List * list = map -> table[hx];
+  
+  if (!map -> table[hx]            ) return NULL;    // nothing hashes to this value
+  if (!map -> table[hx] -> elements) return NULL;    // ----------------------------
+  
+  for (iterate(list, HashmapElement *, element)) {
+    
+    void * element_key = element -> key;
+    
+    when (!map -> key_diff(key, element_key));       // see if keys match
+    
+    return element;                                  // match found
+  }
+  
+  return NULL;                                       // no match found
+}
+
+void * hashmap_get(Hashmap * map, void * key) {
+  // gets element from hashmap, returning NULL if none is found.
+  
+  if (!key) return NULL;                             // NULL maps to nothing
+  
+  HashmapElement * element = hashmap_find(map, key);
+  
+  if (element) return element -> value;
+  else         return NULL;
+}
+
+bool hashmap_exists(Hashmap * map, void * key) {
+  return !!hashmap_find(map, key);    // sees if an element with this key exists in the hashmap
+}
+
+void hashmap_update(Hashmap * map, void * key, void * value) {
+  // updates an element in the hashmap, freeing the old one if needed.
+  
+  HashmapElement * element = hashmap_find(map, key);
+  
+  if (!element)
+    exit_printing(ERROR_PROGRAMMER, "Tried to update an element that does not exist");
+  
+  if (map -> value_free)                      // delete old value
+    (map -> value_free)(element -> value);    // ----------------
+  
+  element -> value = value;                   // assign new value
+}
+
+void vhashmap_delete(Hashmap * map) {         // void version of hashmap delete
+  hashmap_delete(map);
+}
+
+/* Common functions used when creating hashmaps */
+
+int hash_string(void * string, u32 upper_bound) {      // hashes a string using java's algorithm.
+  
+  u32 hx = 0;
+  for (int i = 0; i < strlen((char *) string); i++)
+    hx = hx * 31 + ((char *) string)[i];
+  
+  return (int) (hx % upper_bound);
+}
+
+int hash_address(void * address, u32 upper_bound) {    // hashes an address using logic found on StackOverflow
+  
+  u32 hx = (u32) address;
+  
+  hx = ((hx >> 16) ^ hx) * 0x119de1f3;                 // poster empirically found the constant used
+  hx = ((hx >> 16) ^ hx) * 0x119de1f3;                 // ------------------------------------------
+  hx = ((hx >> 16) ^ hx);                              // ------------------------------------------
   
   return hx % upper_bound;
 }
 
-int compare_strings(void * first, void * other) {
+int compare_strings(void * first, void * other) {      // wraps strcmp
   return strcmp(first, other);
 }
 
-int compare_addresses(void * first, void * other) {
+int compare_addresses(void * first, void * other) {    // wraps numerical comparison
   return (int) (first != other);
-}
-
-void * hashmap_get(Hashmap * this, void * key) {
-  // gets element from hashmap
-  // returns NULL when no element in found
-  
-  int hx = (this -> hash)(key, this -> size);
-  
-  List * list = this -> table[hx];
-  
-  if (!this -> table[hx]        ) return NULL;
-  if (!this -> table[hx] -> size) return NULL;
-  
-  for (iterate(list, HashmapElement *, element)) {
-    
-    void * element_key = element -> key;
-    
-    if (this -> key_diff(key, element_key)) continue;
-    
-    return element -> value;
-  }
-  
-  return NULL;
-}
-
-void hashmap_add(Hashmap * this, void * key, void * value) {
-  // Adds an element to the hashmap
-  
-  int hx = this -> hash(key, this -> size);
-  
-  HashmapElement * element = malloc(sizeof(HashmapElement));
-  element -> key = key;
-  element -> value = value;
-  
-  if (!this -> table[hx])
-    this -> table[hx] = list_that_frees(this -> free);
-  
-  list_insert(this -> table[hx], element);
-  list_insert(this -> all, value);
-  list_insert(this -> keys, key);
-  
-  this -> elements++;
-}
-
-bool hashmap_exists(Hashmap * this, void * key) {
-  
-  int hx = (this -> hash)(key, this -> size);
-  
-  List * list = this -> table[hx];
-  
-  if (!this -> table[hx]        ) return false;
-  if (!this -> table[hx] -> size) return false;
-  
-  for (iterate(list, HashmapElement *, element)) {
-    
-    void * element_key = element -> key;
-    
-    if (this -> key_diff(key, element_key)) continue;
-    
-    return true;
-  }
-  
-  return false;
-}
-
-void hashmap_remove(Hashmap * this, void * key) {
-  // Removes element, making sure it exists
-  // Note, this does not free the old value. If needed, do that yourself
-  // Also! The all list is currently not updated!
-  
-  int hx = this -> hash(key, this -> size);
-
-  List * list = this -> table[hx];
-
-  for (iterate(list, HashmapElement *, element)) {
-
-    void * element_key = element -> key;
-    
-    if (this -> key_diff(key, element_key)) continue;
-    
-    element_node = (void *) ((ListNode *) element_node) -> prev;    // pull-back
-    
-    list_remove(list, ((ListNode *) element_node) -> next);      // ---------
-    //list_remove(this -> all, 
-    
-    this -> elements--;
-    return;
-  }
-  
-  // No match was found in the matching table list
-  exit_printing("Tried to remove element that does not exist\n", ERROR_PROGRAMMER);
-}
-
-void hashmap_update(Hashmap * this, void * key, void * value) {
-  // Updates an element in the hashmap
-  // Note this does not free the old value,
-  // if freeing is necessary, do so by freeing via free(get());
-  // However, I intend to use this to store indices, which are ints.
-  
-  int hx = this -> hash(key, this -> size);
-  
-  List * list = this -> table[hx];
-  
-  if (!list)
-    exit_printing("Tried to update an element that does not exist\n", ERROR_PROGRAMMER);
-  
-  for (iterate(list, HashmapElement *, element)) {
-    
-    void * element_key = element -> key;
-    
-    if (this -> key_diff(key, element_key)) continue;
-    
-    element -> value = value;
-    return;
-  }
-  
-  // No match was found in the matching table list
-  exit_printing("Tried to update an element that does not exist\n", ERROR_PROGRAMMER);
-}
-
-void hashmap_destroy(Hashmap * this) {
-
-  for (int i = 0; i < this -> size; i++) {
-    
-    if (this -> table[i]) {
-      list_destroy(this -> table[i]);
-      this -> table[i] = NULL;
-    }
-  }
-  
-  list_destroy(this -> all);
-  list_destroy(this -> keys);
-  
-  free(this -> table);
-  free(this);
-}
-
-
-void print_hashmap_long(HashmapElement * element) {
-  printf("  %s %ld\n", (char *) element -> key, (long) element -> value);
-}
-
-void hashmap_print(Hashmap * this, element_printer print) {
-  // prints each element in the hash map
-
-  printf("Hashmap of size %d\n",   this -> size);
-  printf("Contains %d elements\n", this -> elements);
-  
-  for (int i = 0; i < this -> size; i++) {
-    
-    if (!this -> table[i]) continue;
-    
-    printf("%d\n", i);
-    
-    List * list = this -> table[i];
-    
-    for (iterate(list, HashmapElement *, element))
-      print(element);
-  }
 }

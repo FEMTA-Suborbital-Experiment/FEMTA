@@ -1,13 +1,15 @@
-#ifndef HEADER_GAURD_ORIGIN
-#define HEADER_GAURD_ORIGIN
+#pragma once
 
-#include <stdbool.h>
+#include "../include/headers.h"
 
-/* static configuration
- *   specify options in origin.c
- */
-extern bool console_error_messages;
+/* static configuration */
 
-float experiment_duration;
+extern bool console_error_messages;    // whether messages should be printed to the console
+extern bool use_real_time_clock;       // whether the real time clock should define expirement time
+extern bool print_to_console;          // whether to print any console output
+extern bool allow_user_input;          // whether to take input from the user
+extern int  console_print_interval;    // the ms between each console printout
 
-#endif
+#define DEBUG_MODE                     // define to track resources
+//#define SIMULATION_MODE                // define to simulate sensors
+#define PLOT_MODE                      // define to redirect console outputs to plot

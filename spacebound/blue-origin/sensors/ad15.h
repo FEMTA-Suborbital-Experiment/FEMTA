@@ -1,27 +1,19 @@
-#ifndef HEADER_GAURD_AD15
-#define HEADER_GAURD_AD15
+#pragma once
 
 /**
  * Sensor:
  *   Analog to digital converter
- *   ADS1115
+ *   Texas Instruments ADS1115
  *   Connected via I2C
  * 
  * Datasheet: 
  *   https://cdn-shop.adafruit.com/datasheets/ads1115.pdf
  * 
- * License:
- *   GPLv3   
- * 
  * Author: 
  *   Noah Franks
  */
 
-#include "sensor.h"
-
-#include "../system/i2c.h"
-#include "../types/types.h"
-#include "../structures/list.h"
+#include "../include/headers.h"
 
 #define AD15_MEASURE_A0 0
 #define AD15_MEASURE_A1 1
@@ -40,12 +32,10 @@
 #define AD15_SDA 0x4A
 #define AD15_SCL 0x4B
 
-Sensor * init_ad15(Sensor * proto, char * title, List * modes, List * names);
-
 typedef struct AD15_Config {
   // read pages 18-19 of datasheet for more informaiton;
   // some of this has a bit of nuance.
-
+  
   union {
     uchar low_byte;           // ease of byte access
     struct {
@@ -56,7 +46,7 @@ typedef struct AD15_Config {
       uchar DATA_RATE: 3;     // samples per second
     };
   };
-
+  
   union {
     uchar high_byte;          // ease of byte access
     struct {
@@ -72,5 +62,3 @@ typedef struct AD15_Config {
   int mode_cycle;             // where in the read cycle the current mode is
   
 } AD15_Config;
-
-#endif

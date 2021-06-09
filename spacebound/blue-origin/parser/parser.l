@@ -1,18 +1,15 @@
 %option noyywrap
 %{
-#include <stdio.h>
-#include <stdlib.h>
-#include <pigpio.h>
 
 #include "y.tab.h"
 
-void yyerror(char * message);
+void yyerror(char * format, ...);
 %}
 
 %option yylineno
 
 white  [ \t\r\n]+
-letter [A-Za-z_]
+letter [A-Za-z_%]
 digit  [0-9]
 
 %%
@@ -21,6 +18,7 @@ digit  [0-9]
 \/\*(([^*/]|\n)|(\*+([^*/]|\n)|\/([^*/]|\n)*|\/\*([^*/]|\n)*))*\**\*\/ {}    // multi comment
 
 if        { return IF;     }
+is        { return IS;     }
 set       { return SET;    }
 pin       { return PIN;    }
 pos       { return POS;    }
@@ -30,7 +28,10 @@ leave     { return LEAVE;  }
 state     { return STATE;  }
 State     { return STATE;  }
 after     { return AFTER;  }
+where     { return WHERE;  }
 define    { return DEFINE; }
+sensor    { return SENSOR; }
+Sensor    { return SENSOR; }
 
 (-|\+)?{digit}+{letter}+ {
   // note, units may never exceed 7 characters
@@ -97,8 +98,17 @@ define    { return DEFINE; }
 
 %%
 
-void yyerror(char * message) {
-  printf("Line %d : %s\n", yylineno, message);
+void yyerror(char * format, ...) {
+  
+  va_list args;
+  va_start(args, format);
+  
+  printf(RED "Line %d : ", yylineno);
+  vprintf(format, args);
+  printf("\n" RESET);
+  
+  va_end(args);
+  
   gpioTerminate();
-  exit(3);
+  exit(ERROR_EXPERIMENTER);
 }

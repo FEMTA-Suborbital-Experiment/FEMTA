@@ -1,35 +1,23 @@
 #pragma once
 
-#include <stdbool.h>
+#include "../include/headers.h"
 
-#include "../sensors/sensor.h"
+typedef struct PinChange {    // specifies a pin actuation
+  
+  char gpio;                  // the broadcom number of the pin to set
+  int  delay;                 // full ms interval until next set
+  
+} PinChange;
 
-typedef struct Charge {
-  
-  char gpio;     // the broadcom number of the pin
-  int  delay;    // used for pulsing
-  
-} Charge;
-
-typedef struct Pin {
-  
-  int broadcom;
+typedef struct Pin {          // a gpio pin
   
   union {
-    bool hot;
-    int duty;
+    bool  hot;                // whether pin is high
+    uint8 duty;               // the pin's PWM dutycycle
   };
   
-  int  ms_until_pulse_completes;    // ms remaining until pulse completes
-  bool pulse_final_state;           // state needed at the end of pulse
-  bool pulses;                      // whether pin may pulse
+  int  queued_delay;          // ms remaining until pin change
+  bool queued_hot;            // whether to go hot once delay is over
+  bool ever_used;             // whether pin has ever been actuated
   
 } Pin;
-
-void init_pins();
-void pin_set(char broadcom, bool hot);
-void pin_set_hot (void * nil, char * vbroadcom);    // selector commands
-void pin_set_cold(void * nil, char * vbroadcom);    // -----------------
-void pin_inform_delays(char broadcom);
-void pin_pulse(char broadcom, int ms, bool hot);
-void fire(Charge * charge, bool hot);

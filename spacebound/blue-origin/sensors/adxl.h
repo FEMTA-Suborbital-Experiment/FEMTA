@@ -1,5 +1,4 @@
-#ifndef HEADER_GAURD_ADXL
-#define HEADER_GAURD_ADXL
+#pragma once
 
 /**
  * Sensor:
@@ -10,20 +9,12 @@
  * Datasheet: 
  *   https://www.analog.com/media/en/technical-documentation/data-sheets/adxl345.pdf
  * 
- * License:
- *   GPLv3   
- * 
  * Author: 
  *   Noah Franks
  */
 
-
-#include "sensor.h"
-
-#include "../system/i2c.h"
-
 #define ADXL_ADDRESS 0x53
 
-Sensor * init_adxl(Sensor * proto);
-
-#endif
+#define ADXL_MEASURE_X 0
+#define ADXL_MEASURE_Y 1
+#define ADXL_MEASURE_Z 2

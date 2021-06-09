@@ -1,64 +1,74 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <pigpio.h>
-
-#include "units.h"
-#include "mathematics.h"
-
-#include "../sensors/sensor.h"
-#include "../structures/list.h"
-#include "../structures/hashmap.h"
-#include "../system/color.h"
-#include "../system/compiler.h"
-#include "../system/error.h"
-
-Hashmap * conversions;
-Hashmap * unit_types;
-List    * all_units;
+#include "../include/program.h"
 
 #define take(FROM, TO) convert##_##FROM##_##TO
 #define arrow(FROM, TO) #FROM "->" #TO
 
 // temperature
-float take(   C,    K) (float x) { return x + 273.15f;                           }
-float take(   K,    C) (float x) { return x - 273.15f;                           }
-float take(   F,    C) (float x) { return x * (9.0f / 5.0f) + 32.0f;             }
-float take(   C,    F) (float x) { return (x - 32.0f) * (5.0f / 9.0f);           }
-float take(   K,    F) (float x) { return (x - 273.15f) * (9.0f / 5.0f) + 32.0f; }
-float take(   F,    K) (float x) { return (x - 32.0f) * (5.0f / 9.0f) + 273.15f; }
+local float take(   C,    K) (float x) { return x + 273.15f;                           }
+local float take(   K,    C) (float x) { return x - 273.15f;                           }
+local float take(   F,    C) (float x) { return (x - 32.0f) * (5.0f / 9.0f);           }
+local float take(   C,    F) (float x) { return x * (9.0f / 5.0f) + 32.0f;             }
+local float take(   K,    F) (float x) { return (x - 273.15f) * (9.0f / 5.0f) + 32.0f; }
+local float take(   F,    K) (float x) { return (x - 32.0f) * (5.0f / 9.0f) + 273.15f; }
 
 // pressure
-float take( atm,  kPa) (float x) { return x * 101.325f;                          }
-float take( kPa,  atm) (float x) { return x / 101.325f;                          }
-float take( atm, torr) (float x) { return x * 760.0f;                            }
-float take(torr,  atm) (float x) { return x / 760.0f;                            }
-float take( kPa, torr) (float x) { return x * 7.50062f;                          }
-float take(torr,  kPa) (float x) { return x / 7.50062f;                          }
+local float take( atm,  kPa) (float x) { return x * 101.325f;                          }
+local float take( kPa,  atm) (float x) { return x / 101.325f;                          }
+local float take( atm, torr) (float x) { return x * 760.0f;                            }
+local float take(torr,  atm) (float x) { return x / 760.0f;                            }
+local float take( kPa, torr) (float x) { return x * 7.50062f;                          }
+local float take(torr,  kPa) (float x) { return x / 7.50062f;                          }
 
 // voltage
-float take(   V,   mV) (float x) { return x * 1000.0f;                           }
-float take(  mV,    V) (float x) { return x / 1000.0f;                           }
+local float take(   V,   mV) (float x) { return x * 1000.0f;                           }
+local float take(  mV,    V) (float x) { return x / 1000.0f;                           }
 
 // time
-float take(   s,   ms) (float x) { return x * 1000.0f;                           }
-float take(  ms,    s) (float x) { return x / 1000.0f;                           }
-float take(   s,  min) (float x) { return x / 60.0f;                             }
-float take( min,    s) (float x) { return x * 60.0f;                             }
-float take(  ms,  min) (float x) { return x / 60000.0f;                          }
-float take( min,   ms) (float x) { return x * 60000.0f;                          }
+local float take(   s,   ms) (float x) { return x * 1000.0f;                           }
+local float take(  ms,    s) (float x) { return x / 1000.0f;                           }
+local float take(   s,  min) (float x) { return x / 60.0f;                             }
+local float take( min,    s) (float x) { return x * 60.0f;                             }
+local float take(  ms,  min) (float x) { return x / 60000.0f;                          }
+local float take( min,   ms) (float x) { return x * 60000.0f;                          }
+
+// storage
+local float take(   B,   KB) (float x) { return x / 1024.0f;                           }
+local float take(  KB,    B) (float x) { return x * 1024.0f;                           }
+local float take(   B,   MB) (float x) { return x / 1048576.0f;                        }
+local float take(  MB,    B) (float x) { return x * 1048576.0f;                        }
+local float take(  KB,   MB) (float x) { return x / 1024.0f;                           }
+local float take(  MB,   KB) (float x) { return x * 1024.0f;                           }
+
+// resistance
+local float take( Ohm, kOhm) (float x) { return x / 1000.0f;                           }
+local float take(kOhm,  Ohm) (float x) { return x * 1000.0f;                           }
+
+// length
+local float take(   m,   ft) (float x) { return x * 3.28f;                             }
+local float take(  ft,    m) (float x) { return x / 3.28f;                             }
+
+// mass
+local float take(  kg,  lbs) (float x) { return x * 2.2f;                              }
+local float take( lbs,   kg) (float x) { return x / 2.2f;                              }
+
+// current
+local float take(   A,   mA) (float x) { return x * 1000.0f;                           }
+local float take(  mA,    A) (float x) { return x / 1000.0f;                           }
 
 
-// utilities
-float convert_identity (float x)  { return x;                                    }
+local Hashmap * conversions;    // internally known, common conversions between units of the same type
+local Hashmap * unit_types;     // the type associated with each unit
+local List    * all_units;      // names for all the units known
 
+float convert_identity (float x)  { 
+  return x;
+}
 
 void init_units() {
   
-  conversions = hashmap_create(hash_string, compare_strings, NULL, 16);
-  unit_types  = hashmap_create(hash_string, compare_strings, NULL, 16);
+  conversions = hashmap_create(hash_string, compare_strings, NULL, NULL, 26);
+  unit_types  = hashmap_create(hash_string, compare_strings, NULL, NULL, 16);
   
   hashmap_add(conversions, arrow(   C,    K), take(   C,    K));
   hashmap_add(conversions, arrow(   K,    C), take(   K,    C));
@@ -80,6 +90,21 @@ void init_units() {
   hashmap_add(conversions, arrow( min,    s), take( min,    s));
   hashmap_add(conversions, arrow(  ms,  min), take(  ms,  min));
   hashmap_add(conversions, arrow( min,   ms), take( min,   ms));
+  hashmap_add(conversions, arrow(   B,   KB), take(   B,   KB));
+  hashmap_add(conversions, arrow(  KB,    B), take(  KB,    B));
+  hashmap_add(conversions, arrow(   B,   MB), take(   B,   MB));
+  hashmap_add(conversions, arrow(  MB,    B), take(  MB,    B));
+  hashmap_add(conversions, arrow(  KB,   MB), take(  KB,   MB));
+  hashmap_add(conversions, arrow(  MB,   KB), take(  MB,   KB));
+  hashmap_add(conversions, arrow( Ohm, kOhm), take( Ohm, kOhm));
+  hashmap_add(conversions, arrow(kOhm,  Ohm), take(kOhm,  Ohm));
+  hashmap_add(conversions, arrow(   m,   ft), take(   m,   ft));
+  hashmap_add(conversions, arrow(  ft,    m), take(  ft,    m));
+  hashmap_add(conversions, arrow(  kg,  lbs), take(  kg,  lbs));
+  hashmap_add(conversions, arrow( lbs,   kg), take( lbs,   kg));
+  hashmap_add(conversions, arrow(   A,   mA), take(   A,   mA));
+  hashmap_add(conversions, arrow(  mA,    A), take(  mA,    A));
+  
   
   hashmap_add(unit_types,    "C", "Temperature");
   hashmap_add(unit_types,    "K", "Temperature");
@@ -92,16 +117,32 @@ void init_units() {
   hashmap_add(unit_types,    "s",        "Time");
   hashmap_add(unit_types,   "ms",        "Time");
   hashmap_add(unit_types,  "min",        "Time");
+  hashmap_add(unit_types,    "%",  "Proportion");
   hashmap_add(unit_types,    "i",     "Integer");
   hashmap_add(unit_types,    "f",     "Decimal");
+  hashmap_add(unit_types,    "B",     "Storage");
+  hashmap_add(unit_types,  "Ohm",  "Resistance");
+  hashmap_add(unit_types, "kOhm",  "Resistance");
+  hashmap_add(unit_types,    "m",      "Length");
+  hashmap_add(unit_types,   "ft",      "Length");
+  hashmap_add(unit_types,   "kg",        "Mass");
+  hashmap_add(unit_types,  "lbs",        "Mass");
+  hashmap_add(unit_types,   "cd",   "Intensity");
+  hashmap_add(unit_types,    "A",     "Current");
+  hashmap_add(unit_types,   "mA",     "Current");
+  hashmap_add(unit_types,  "mol",    "Quantity");
   
-  all_units = list_from(12, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min");
+  
+  all_units = list_from
+    (26, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min", "%", "B", "KB", "MB", "Ohm", "kOhm", "m", "ft", "kg", "lbs", "cd", "A", "mA", "mol");
 }
 
 void drop_units() {
-  hashmap_destroy(conversions);
-  hashmap_destroy(unit_types);
-  list_destroy(all_units);
+  hashmap_delete(conversions);
+  hashmap_delete(unit_types);
+  list_delete(all_units);
+  conversions = unit_types = NULL;
+  all_units = NULL;
 }
 
 bool unit_is_supported(char * unit_name) {
@@ -123,25 +164,30 @@ bool unit_is_of_type(Numeric * numeric, char * type) {
 
 void print_units_supported() {
   printf
-    ("Time\n"
-     "   s   : system second\n"
-     "  ms   : system milli-second\n"
-     " min   : system minute\n"
-     "\n"
-     "Temperature\n"
-     "  C    : Celcius\n"
-     "  K    : Kelvin\n"
-     "  F    : Fahrenheit\n"
-     "\n"
-     "Pressure\n"
-     "  atm  : Atmospheres\n"
-     "  kPa  : kilo-Pascals\n"
-     "  torr : Torrecelli's unit\n"
-     "\n"
-     "Voltage\n"
-     "   V   : Volts\n"
-     "  mV   : milli-Volts\n"
-     "\n"
+    ("Time                          Temperature        \n"
+     "   s   : system second           C   : Celcius   \n"
+     "  ms   : system milli-second     K   : Kelvin    \n"
+     " min   : system minute           F   : Fahrenheit\n"
+     
+     "Pressure                      Storage            \n"
+     "  atm  : Atmospheres              B  : Bytes     \n"
+     "  kPa  : kilo-Pascals            KB  : Kilobytes \n"
+     "  torr : Torrecelli's unit       MB  : Megabytes \n"
+     
+     "Resistance                   Length              \n"
+     "  Ohm  : Ohms                   m   : Meters     \n"
+     " kOhm  : kilo-Ohms             ft   : feet       \n"
+     
+     "Mass                         Current             \n"
+     "  kg  : kilo-Grams               A  : Amperes    \n"
+     " lbs  : Pounds                  mA  : milli-Amps \n"
+     
+     "Amount                       LightIntensity      \n"
+     " mol  : Moles                   cd  : Candelas   \n"
+     
+     "Voltage              \n"
+     "   V   : Volts       \n"
+     "  mV   : milli-Volts \n"
      );
 }
 
@@ -187,14 +233,41 @@ SeriesElement * series_element_from_calibration(Calibration * calibration) {
   return element;
 }
 
+void series_element_delete(void * vSeriesElement) {
+  
+  SeriesElement * element = vSeriesElement;
+  
+  if (element -> universal) {   // conversion's are just function pointers
+    free(element);
+    return;
+  }
+  
+  calibration_delete(element -> calibration);
+  element -> calibration = NULL;
+  free(element);
+}
+
+void calibration_delete(void * vCalibration) {
+  
+  Calibration * calibration = vCalibration;
+  
+  calibration -> constants -> value_free = free;
+  list_delete(calibration -> constants);
+  calibration -> constants = NULL;
+  
+  blank(calibration -> curve);
+  blank(calibration -> target);
+  blank(calibration -> unit_from);
+  blank(calibration -> unit_to);
+  free(calibration);
+}
 
 Conversion get_universal_conversion(char * from, char * to) {
-  /* yields the conversion from one unit to the other, assuming the conversion
-   * is the same across all domains. In other words, specific conversions related to
-   * calibrations on sensors won't be returned; only generic ones like Celcius to Fahrenheit */
+  // Yields a conversion, as defined by Attribute #1. Accordingly,
+  // all conversions take one unit to another of the same type.
   
   if (!strcmp(from, to))
-    return convert_identity;
+    return convert_identity;    // same unit before and after
   
   char lookup[16];
   sprintf(lookup, "%s->%s", from, to);
@@ -203,21 +276,18 @@ Conversion get_universal_conversion(char * from, char * to) {
   
   if (unlikely(conversion == NULL)) {
     print_units_supported();
-    printf("Unknown conversion %s -> %s\n", from, to);
-    printf("Please use units from the table above\n");
-    gpioTerminate();
-    exit(ERROR_EXPERIMENTER);
+    printf(RED "Unknown conversion %s -> %s\n" RESET, from, to);
+    yyerror("Please use units from the table above");
   }
   
   return conversion;
 }
 
 static float compute_curve(float x, Calibration * calibration) {
+  // computes a calibration step, as defined by Attribute #1.
   
-  char * curve     = calibration -> curve;
-  List * constants = calibration -> constants;
-  
-  // a calibration consists of a curve name followed by constants
+  char * curve     = calibration -> curve;        // the shape of the function f(x)
+  List * constants = calibration -> constants;    // the constants used in f(x)
   
   if (!strcmp(curve, "poly")) {
     
@@ -244,16 +314,18 @@ static float compute_curve(float x, Calibration * calibration) {
     
     float log_x = log(x);    // need to compute Iset
     
-    return 1.0f / (A + B * log_x + C * cube(log_x));
+    return 1.0f / (A + B * log_x + C * log_x * log_x * log_x);
   }
   
-  printf(RED "Tried to evaluate unknown curve " CYAN "%s\n" RESET);
-  exit(ERROR_PROGRAMMER);
+  exit_printing(ERROR_PROGRAMMER, "Tried to evaluate unknown curve " CYAN "%s", curve);
 }
 
 float series_compute(List * series, float x) {
-  // compute a series of conversions to get a final value.
-  // the series may include universal conversions as well as sensor-specific ones.
+  // computes a series on x to yeild a final measure value, which may include
+  // universal conversions as well as sensor-specific calibrations, as per Attribute #1.
+  
+  if (!series)    // the null series is defined to be the identity series
+    return x;
   
   for (iterate(series, SeriesElement *, step))
     if (step -> universal) x = (step -> conversion)(x);

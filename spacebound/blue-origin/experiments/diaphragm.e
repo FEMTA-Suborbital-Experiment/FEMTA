@@ -9,16 +9,40 @@
  **/
 
 define enter start;
+define leave descent;
+define leave ascent;
+define leave end;
 
 ad15_vdd 100Hz {};
 
 ad15_sda 100Hz {
+
+  if (State start | A2 > 22kPa) {
+    set pin 19 pos;
+    set pin 26 neg;
+    set pin 26 pos after 350ms;
+
+    leave start;
+    enter descent after 1s;
+  }
   
-  /*if (A2 < 10kPa | single) {
-    set pin 19 neg;
+  if (State descent | A2 < 10kPa) {
     set pin 26 pos;
-    set pin 26 neg after 350ms;
-    }*/
+    set pin 19 neg;
+    set pin 19 pos after 350ms;
+
+    leave descent;
+    enter ascent after 1s;
+  }
+
+  if (State ascent | A2 > 10kPa) {
+    set pin 19 pos;
+    set pin 26 neg;
+    set pin 26 pos after 350ms;
+
+    leave ascent;
+    enter end after 1s;
+  }
   
   [calibrate | A2, poly, V, kPa |    // we expect 11.3v at 1atm | V->kPa
      -0.00000805518095144006,        // degrees are from high to low
@@ -40,11 +64,11 @@ ad15_sda 100Hz {
   
   [calibrate   | A2, poly, raw, V | 0.00041234314, -0.00198277794];
   [conversions | A2, raw, V, kPa  |                              ];
-  //[smooth      | A2               | 0.1                          ];
+  [smooth      | A2               | 0.1                          ];
   
   [calibrate   | A0, poly, raw, V | 0.00041234314, -0.00198277794];
   [conversions | A0, raw, V, kPa  |                              ];
-  //[smooth      | A0               | 0.1                          ];
+  [smooth      | A0               | 0.1                          ];
   
   [print       | gray             |                            ]
 }

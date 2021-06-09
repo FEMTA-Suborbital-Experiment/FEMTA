@@ -1,0 +1,82 @@
+* Sensors
+** ds32
+*** DS3231: Real-time clock
+*** Address
+**** RTC: 0x68
+*** Properties
+**** Time
+**** Temperature
+** ds18
+*** DS18B20: Temperature sensor
+*** Address
+**** DS18: 0x18
+*** Properties
+**** Temperature
+** arm6
+*** CPU
+*** Properties
+**** Load
+**** Memory
+**** Temperature
+** adxl
+*** Accelerometer (deprecated)
+*** Properties
+**** X
+**** Y
+**** Z
+** mcp9
+*** MCP9808: I2C temperature sensor
+** test
+*** Testing sensor (can make constant value, sine wave, etc.)
+*** Properties
+**** zero
+**** identity
+**** sine
+**** cosine
+**** random
+** veml
+*** VEML6075: UVA and UVB I2C light sensor
+**** one of them: 0x10
+**** the other one: 0x11 (this one doesn't exist any more
+*** Properties
+**** UVA
+**** UVB
+** slf3_left, slf3_right
+*** SLF3-1300F: I2C flow sensor
+*** Addresses
+**** one of them: 0x08
+**** the other one: 0x09
+*** Properties
+**** Flow
+**** Temperature
+**** Bubble
+** ad15_gnd, ad15_vdd, ad15_sda, ad15_scl
+*** Analog-to-digital converters (ad15_scl might not be relevant)
+*** Addresses
+**** ad15_gnd: 0x48
+**** ad15_vdd: 0x49
+**** ad15_sda: 0x4a
+*** Properties
+**** A0
+**** A1
+**** A2
+**** A3
+
+
+* Colors
+** white
+** red
+** green
+** yellow
+** blue
+** magenta
+** purple
+** cyan
+** grey
+** gray
+** orange
+** pink
+** mint
+** maroon
+** salmon
+** brown

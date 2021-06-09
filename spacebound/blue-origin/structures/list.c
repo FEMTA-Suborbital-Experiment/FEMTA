@@ -1,84 +1,46 @@
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdarg.h>
+#include "../include/program.h"
 
-#include "list.h"
-
-#include "../types/thread-types.h"
-
-ListNode * list_create_node(void * value) {
-  ListNode * node = malloc(sizeof(ListNode));
+local ListNode * list_create_node(void * value) {      // creates node storing value
+  ListNode * node = calloc(1, sizeof(*node));
   node -> value = value;
-  node -> next = NULL;
-  node -> prev = NULL;
   return node;
 }
 
-List * list_create() {
-  // Creates a list with potentially limited length
-  
-  List * list = malloc(sizeof(List));
-  list -> head = NULL;
-  list -> free = NULL;
-  list -> lock = NULL;
-  list -> size = 0;
-  return list;
+List * list_create() {                                 // creates an empty list
+  return calloc(1, sizeof(List));
 }
 
-List * list_from(int vargs, ...) {
-  // Creates a list from arguments
-  // The list returned is an SLL with no auto freeing
-
+List * list_from(int nargs, ...) {                     // creates a list holding the arguments
+  
   List * list = list_create();
   
-  va_list argPointer;
+  va_list args;
+  va_start(args, nargs);
   
-  va_start(argPointer, vargs);
+  for (int i = 0; i < nargs; i++)
+    list_insert(list, va_arg(args, void *));
   
-  for (int i = 0; i < vargs; i++) {
-    list_insert(list, va_arg(argPointer, void *));
-  }
-  
-  va_end(argPointer);
-  
+  va_end(args);
   return list;
 }
 
-List * list_that_frees(ValueFree freer) {
+List * list_that_frees(freer value_free) {             // creates a list that frees its elements
   List * list = list_create();
-  list -> free = freer;
+  list -> value_free = value_free;
   return list;
 }
 
-void list_lock(List * list) {
-
-  if (!list -> lock) {
-    list -> lock = malloc(sizeof(Mutex));
-    pthread_mutex_init(list -> lock, NULL);
-  }
+void list_insert(List * list, void * value) {          // inserts node at the tail in O(1)
   
-  pthread_mutex_lock(list -> lock);
-}
-
-void list_unlock(List * list) {
-  pthread_mutex_unlock(list -> lock);
-}
-
-void list_insert(List * list, void * value) {
-  // Inserts node into the linked list
-  // Complexity: O(1)
-
-  list -> size++;
+  list -> elements++;
   
   ListNode * node = list_create_node(value);
   
-  if (list -> head == NULL) {
-    list -> head = node;
-    
-    node -> prev = node;
-    node -> next = node;
+  if (!list -> head) {
+    list -> head = node;                               // a list with only 1 node points to itself
+    node -> prev = node;                               // ----------------------------------------
+    node -> next = node;                               // ----------------------------------------
     return;
   }
   
@@ -89,90 +51,42 @@ void list_insert(List * list, void * value) {
   list -> head -> prev = node;
 }
 
-void list_insert_first(List * list, void * value) {
-  // Inserts node into the linked list
-  // Complexity: O(1)
-
-  list -> size++;
-  
-  ListNode * node = list_create_node(value);
-  
-  if (list -> head == NULL) {
-    list -> head = node;
-    
-    node -> prev = node;
-    node -> next = node;
-    return;
-  }
-  
-  node -> next = list -> head;
-  node -> prev = list -> head -> prev;
-  
-  list -> head -> prev -> next = node;
-  list -> head -> prev = node;
-  list -> head = node;
+void list_insert_first(List * list, void * value) {    // inserts node at the head in O(1)
+  list_insert(list, value);                            // insert into the list, but roll the tail
+  list -> head = list -> head -> prev;                 // ---------------------------------------
 }
 
-void list_concat(List * first, List * other) {
-  // concatenates two lists
-
-  if (!other) return;    // nothing to concatenate
-  else if (!first) {
-    first = list_create();
-    first -> head = other -> head;
-    first -> size = other -> size;
-    return;
-  }
-  else if (!first -> head) {
-    first -> head = other -> head;
-    first -> size = other -> size;
-    return;
-  }
-
-  ListNode * other_tail = other -> head -> prev;
+void * list_retrieve(List * list, int index) {         // retrieves the ith element in the list in O(n)
   
-  first -> head -> prev -> next = other -> head;
-  other -> head -> prev -> next = first -> head;
-  other -> head -> prev         = first -> head -> prev;
-  first -> head -> prev         = other_tail;
+  if (unlikely(index >= list -> elements))
+    exit_printing(ERROR_PROGRAMMER, "list_retrieve: index out of bounds");
   
-  first -> size += other -> size;
+  for (iterate(list, void *, entry))
+    if ((int) entry_index == index)
+      return entry;
+  
+  exit_printing(ERROR_PROGRAMMER, "list corruption observed when retrieving element %d", index);
 }
 
-
-void list_remove(List * list, ListNode * node) {
-  // Removes node from list
+void list_remove(List * list, ListNode * node) {       // removes a node from the list in O(1), freeing if necessary
   
-  node -> next -> prev = node -> prev;   // Drop out of DLL
-  node -> prev -> next = node -> next;   // ---------------
+  node -> next -> prev = node -> prev;                 // Drop out of DLL
+  node -> prev -> next = node -> next;                 // ---------------
   
-  if (node == list -> head) {
-    list -> head = node -> next;       // Advance head
-  }
+  if (node == list -> head)                            // Advance head if necessary
+    list -> head = node -> next;                       // -------------------------
   
-  if (--list -> size == 0) list -> head = NULL;
-
-  if (list -> free) (list -> free)(node -> value);
+  if (--list -> elements == 0) list -> head = NULL;
+  
+  if (list -> value_free) (list -> value_free)(node -> value);
   free(node);
 }
 
-void list_empty(List * list) {
-  // Removes all size in the list
+void * list_delete(List * list) {                      // completely delete the list and its elements
   
-  while (list -> size) {
+  while (list -> elements)
     list_remove(list, list -> head);
-  }
-}
-
-void list_destroy(List * list) {
-  // Completely destroys the list
   
-  if (list -> lock) {
-    pthread_mutex_destroy(list -> lock);
-    free(list -> lock);
-    list -> lock = NULL;
-  }
-  
-  list_empty(list);
   free(list);
+  return NULL;
 }

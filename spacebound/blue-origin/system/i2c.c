@@ -1,31 +1,23 @@
 
-#define _GNU_SOURCE
+#include "../include/program.h"
 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <pthread.h>
-#include <pigpio.h>
-#include <sys/prctl.h>
-#include <time.h>
+#define I2C_NOT_REGISTERED -1    // i2c address available, but not registered
+#define I2C_NOT_ALLOWED    -2    // i2c address not allowed (may be used for faking, though)
 
-#include "clock.h"
-#include "color.h"
-#include "i2c.h"
+#ifdef SIMULATION_MODE           // prevent preprocessor attack
+#undef i2c_read_byte             // ---------------------------
+#undef i2c_read_bytes            // ---------------------------
+#undef i2c_raw_read              // ---------------------------
+#undef i2c_raw_write             // ---------------------------
+#undef i2c_write_byte            // ---------------------------
+#undef i2c_write_bytes           // ---------------------------
+#endif
 
-#include "../.origin/origin.h"
-#include "../sensors/sensor.h"
-#include "../structures/list.h"
-#include "../system/gpio.h"
-#include "../types/types.h"
-#include "../types/thread-types.h"
+local int8 handles[0x7F];        // pigpio handle to i2c address table
 
-int8 handles[0x7F];
+local void * i2c_main();
 
-void * i2c_main();
-
-i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader) {
-  // creates an i2c device, adding it to the device list
+i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader, char * message) {    // create and register
   
   i2c_device * i2c = calloc(1, sizeof(*i2c));
   
@@ -33,244 +25,203 @@ i2c_device * create_i2c_device(Sensor * sensor, i2c_reader reader) {
   i2c -> read     = reader;
   
   i2c -> address           = sensor -> address;
-  i2c -> hertz             = sensor -> hertz;
+  i2c -> hertz_numerator   = sensor -> hertz_numerator;
   i2c -> hertz_denominator = sensor -> hertz_denominator;
   
-  if (i2c -> hertz)
-    i2c -> interval = 1000 / (i2c -> hertz);
+  if (i2c -> hertz_numerator)
+    i2c -> interval = schedule -> i2c_cycle / (i2c -> hertz_numerator);
   
-  if (!i2c -> hertz_denominator)
-    i2c -> hertz_denominator = 1;
+  if (handles[i2c -> address] == I2C_NOT_REGISTERED &&                     // register new i2c instance
+      handles[i2c -> address] != I2C_NOT_ALLOWED      )                    // -------------------------
+    handles[i2c -> address] = i2cOpen(1, i2c -> address, 0);               // -------------------------
   
-  
-  // see if we need to open another i2c instance
-  if (handles[i2c -> address] == -1) {
-    i2c -> handle = i2cOpen(1, i2c -> address, 0);
-    handles[i2c -> address] = i2c -> handle;
-  } else {
-    i2c -> handle = handles[i2c -> address];
-  }
+  i2c -> handle = handles[i2c -> address];
+  i2c -> log = safe_open(sensor -> log_path, "a");
   
   // print a nice message for the user
-  printf("Started " GREEN "%s " RESET "at " YELLOW "%dHz " RESET "on " BLUE "0x%x " RESET,
-	 sensor -> name, sensor -> hertz, i2c -> address);
+  printf("Started " GREEN "%s " RESET "at " YELLOW "%d", sensor -> name, sensor -> hertz_numerator);
+  if (i2c -> hertz_denominator != 1) printf("/%d", sensor -> hertz_denominator);
+  printf("Hz " RESET "on " BLUE "0x%x " RESET, i2c -> address);
   if (sensor -> print) printf("with " MAGENTA "printing\n" RESET);
   else                 printf("\n");
+  printf("logged in %s\n%s\n\n", sensor -> log_path, message);
+  
+  #ifdef SIMULATION_MODE
+  i2c -> read = simulation_read_i2c;                                       // connect to simulation instead
+  #endif
   
   return i2c;
 }
 
-uint8 i2c_read_byte(i2c_device * dev, uint8 reg) {
-  // reads a single byte from an i2c device
-  
+uint8 i2c_read_byte(i2c_device * dev, uint8 reg) {                         // read a single byte
   return i2cReadByteData(dev -> handle, reg);
 }
 
-bool i2c_read_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
-  // reads up to 32 bytes from an i2c device
+bool i2c_read_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {    // read up to 32 bytes
   
   if (i2cReadI2CBlockData(dev -> handle, reg, buf, n) < 0) {
-    
-    if (console_error_messages)
-      printf(RED "Could not read bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    
+    print_error("Could not read bytes from " YELLOW "%s\n", dev -> sensor -> code_name);
     fprintf(schedule -> i2c_error_log, "%f%s\tread\t0x%u\t%d\n", time_passed(), time_unit, reg, n);
-    
     return false;
   }
   return true;
 }
 
-bool i2c_raw_read(i2c_device * dev, uint8 * buf, char n) {
-  // reads up to 32 bytes from an i2c device, without asking for a particular register
-  
+bool i2c_raw_read(i2c_device * dev, uint8 * buf, char n) {                 // read up to 32 bytes, without 
+                                                                           // specifying a particular register
   if (i2cReadDevice(dev -> handle, buf, n)) {
-    
-    if (console_error_messages)
-      printf(RED "Could not read raw bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    
+    print_error("Could not read raw bytes from " YELLOW "%s\n", dev -> sensor -> code_name);
     fprintf(schedule -> i2c_error_log, "%f%s\tread\t----\t%d\n", time_passed(), time_unit, n);
-    
     return false;
   }
   return true;
 }
 
-bool i2c_raw_write(i2c_device * dev, uint8 * buf, char n) {
-  // writes up to 32 bytes from an i2c device, without specifying a particular register
-  
+bool i2c_raw_write(i2c_device * dev, uint8 * buf, char n) {                 // write up to 32 bytes, without
+                                                                            // specifying a particular register
   if (i2cWriteDevice(dev -> handle, buf, n)) {
-    
-    if (console_error_messages)
-      printf(RED "Could not write raw bytes from " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    
+    print_error("Could not write raw bytes from " YELLOW "%s\n", dev -> sensor -> code_name);
     fprintf(schedule -> i2c_error_log, "%f%s\twrite\t----\t%d\n", time_passed(), time_unit, n);
-    
     return false;
   }
   return true;
 }
 
-bool i2c_write_byte(i2c_device * dev, uint8 reg, uint8 value) {
-  // writes a byte to the i2c device
+bool i2c_write_byte(i2c_device * dev, uint8 reg, uint8 value) {             // write a byte
   
   if (i2cWriteByteData(dev -> handle, reg, value) < 0) {
-    
-    if (console_error_messages)
-      printf(RED "Could not write byte to " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    
+    print_error("Could not write byte to " YELLOW "%s\n", dev -> sensor -> code_name);
     fprintf(schedule -> i2c_error_log, "%f%s\twrite\t0x%u\t1\n", time_passed(), time_unit, reg);
-    
     return false;
   }
   return true;
 }
 
-bool i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {
-  // writes up to 32 bytes to the i2c device
+bool i2c_write_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {    // write up to 32 bytes
   
   if (i2cWriteI2CBlockData(dev -> handle, reg, buf, n)) {
-    
-    if (console_error_messages)
-      printf(RED "Could not write bytes to " YELLOW "%s\n" RESET, dev -> sensor -> name);
-    
+    print_error(RED "Could not write bytes to " YELLOW "%s\n" RESET, dev -> sensor -> code_name);
     fprintf(schedule -> i2c_error_log, "%f%s\twrite\t0x%u\t%d\n", time_passed(), time_unit, reg, n);
-    
     return false;
   }
   return true;
 }
 
-
-void i2c_close(i2c_device * i2c) {
-  // closes and frees the i2c device
-  fclose(schedule -> i2c_error_log);
-  fclose(schedule -> control_log);    // change if not i2c-bound
+void i2c_close(i2c_device * i2c) {                                          // closes and frees the i2c device
+  
   fclose(i2c -> log);
-  i2cClose(i2c -> handle);
+  i2c -> log = NULL;
+  
+  if (handles[i2c -> address] >= 0) {                                       // only close once
+    handles[i2c -> address] = I2C_NOT_REGISTERED;
+    i2cClose(i2c -> handle);
+  }
   free(i2c);
 }
 
-void init_i2c() {
-  // initialize i2c data structures
+void init_i2c() {                                                           // initialize i2c data structures
   
   schedule -> i2c_devices = list_create();
   schedule -> i2c_thread  = malloc(sizeof(*schedule -> i2c_thread));
-    
-  // prepare handle array
-  for (int i = 0; i < 0x7F; i++)
-    handles[i] = -1;
   
-  schedule -> i2c_error_log = fopen("./logs/errors-i2c.log", "a");
-  schedule -> control_log = fopen("./logs/control.log", "a");
+  memset(handles, I2C_NOT_REGISTERED, 0x7F);                                // 0x03 through 0x7F are available
+  memset(handles, I2C_NOT_ALLOWED   , 0x02);                                // 0x00 through 0x02 are reserved
   
-  fprintf(schedule -> control_log, GRAY "Time\tEvent\tInstance\tValue\n" RESET);
-  fprintf(schedule -> i2c_error_log, RED "Time\tType\t\tRegister\tBytes\n" RESET);
+  schedule -> i2c_error_log = safe_open("./logs/errors-i2c.log", "a");
+  schedule ->   control_log = safe_open("./logs/control.log"   , "a");
+  
+  fprintf(schedule -> i2c_error_log, RED  "Time\tType\tRegister\tBytes\n"  RESET);
+  fprintf(schedule ->   control_log, GRAY "Time\tEvent\tInstance\tValue\n" RESET);
 }
 
-void start_i2c() {
+void drop_i2c() {                                                           // delete the i2c system's structures
   
-  if (!schedule -> i2c_active) return;
-  
-  printf("\nStarting i2c schedule with " MAGENTA "%d " RESET "events\n", schedule -> i2c_devices -> size);
-  
-  // create i2c thread
-  if (pthread_create(schedule -> i2c_thread, NULL, i2c_main, NULL)) {
-    printf(RED "Could not start i2c thread\n" RESET);
-    return;
-  }
-}
-
-void terminate_i2c() {
-  // frees everything associated with the i2c system
-  
-  list_destroy(schedule -> i2c_devices);      // note that this kills
-  
-  free(schedule -> i2c_thread);
-  
+  list_delete(schedule -> i2c_devices);                                     // note that this kills
   schedule -> i2c_devices = NULL;
-  schedule -> i2c_thread  = NULL;
+  
+  blank(schedule -> i2c_thread);
+  
+  fclose(schedule -> i2c_error_log);
+  fclose(schedule ->   control_log);                                        // change if not i2c-bound
+}
+
+void start_i2c() {                                                          // start the i2c thread
+  
+  if (!schedule -> i2c_active)                                              // no i2c sensors were requested
+    return;                                                                 // -----------------------------
+  
+  printf("\nStarting i2c schedule with " MAGENTA "%d " RESET "events\n\n", schedule -> i2c_devices -> elements);
+  
+  if (schedule -> print_sensors) {
+    
+    printf(GREY "    Time  ");
+    
+    for (iterate(active_sensors, Sensor *, sensor)) {
+      if (sensor -> print) {
+        for (int stream = 0; stream < sensor -> data_streams; stream++) {
+          
+          Output * output = &sensor -> outputs[stream];
+          
+          when (output -> print);
+          
+          printf("%s%*s  ", output -> print_code, 
+                 5 + output -> print_places + strlen(output -> unit), 
+                 output -> nice_name);
+        }
+      }
+    }
+    
+    printf("\n" RESET);
+  }
+  
+  if (pthread_create(schedule -> i2c_thread, NULL, i2c_main, NULL))         // create i2c thread
+    printf(RED "Could not start i2c thread\n" RESET);                       // -----------------
 }
 
 void * i2c_main() {
   
   prctl(PR_SET_NAME, "i2c sched", NULL, NULL, NULL);
   
-  FILE * i2c_log = fopen("logs/i2c.log", "a");
+  FILE * i2c_log = safe_open("logs/i2c.log", "a");
   fprintf(i2c_log, GRAY "Read duration [ns]\n" RESET);
   
-  long bus_interval    = schedule -> i2c_interval;
-  long bus_interval_ms = schedule -> i2c_interval / (long) 1E6;
-  
-  long last_read_duration = 0;    // tracks time taken to read i2c bus
+  long last_read_duration = 0;                                              // tracks time taken to read i2c bus
   
   while (!schedule -> term_signal) {
     
-    // get time before we perform the read
-    struct timespec pre_read_time;
-    clock_gettime(CLOCK_REALTIME, &pre_read_time);
+    struct timespec pre_read_time;                                          // get time before we perform the read
+    clock_gettime(CLOCK_REALTIME, &pre_read_time);                          // -----------------------------------
     
     fprintf(i2c_log, "%ld\n", last_read_duration);
     
+    process_pin_queue  (schedule -> i2c_interval / 1000000);                // process gpios waiting for changes
+    process_state_queue(schedule -> i2c_interval / 1000000);                // process states waiting for changes
     
-    // pulse pins
-    for (iterate(schedule -> pulse_pins, Pin *, pin)) {
+    for (iterate(schedule -> i2c_devices, i2c_device *, i2c)) {             // read sensors
       
-      //printf("DEBUG WIRE: %d " YELLOW "%d" RESET "\n", pin -> broadcom, pin -> ms_until_pulse_completes);
-      
-      if (!pin -> ms_until_pulse_completes) continue;
-      
-      pin -> ms_until_pulse_completes -= bus_interval_ms;
-      
-      if (pin -> ms_until_pulse_completes <= 0) {
-	pin_set(pin -> broadcom, pin -> pulse_final_state);
-	pin -> ms_until_pulse_completes = 0;
+      if (++i2c -> count == (i2c -> interval) * (i2c -> hertz_denominator) || i2c -> reading) {
+        
+        $(i2c, read);
+        
+        i2c -> count = 0;
+        
+        schedule -> last_i2c_dev = i2c;
       }
     }
-
-
-    // change states
-    for (iterate(state_delays -> all, StateDelay *, state_delay)) {
-
-      //printf("DEBUG STATE: %s " CYAN "%d" RESET "\n", state_delay -> state, state_delay -> ms_remaining);
-      
-      if (!state_delay -> ms_remaining) continue;
-      
-      state_delay -> ms_remaining -= bus_interval_ms;
-      
-      if (state_delay -> ms_remaining <= 0) {
-	if (state_delay -> entering) enter_state(state_delay -> state);
-	else                         leave_state(state_delay -> state);
-	state_delay -> ms_remaining = 0;
-      }
-      
-    }
     
-    // read sensors
-    for (iterate(schedule -> i2c_devices, i2c_device *, i2c)) {
-      
-      i2c -> count += bus_interval_ms;
-      
-      if (i2c -> count == (i2c -> interval) * (i2c -> hertz_denominator) || i2c -> reading) {
-	
-	(i2c -> read)(i2c);
-	
-	i2c -> count = 0;
-      }
-    }    
-    
+    consider_printing_sensors(schedule -> i2c_interval / 1000000);
     
     // figure out how long to sleep
     long read_duration = real_time_diff(&pre_read_time);
     
-    long time_remaining = bus_interval - read_duration;
+    long time_remaining = (schedule -> i2c_interval) - read_duration;
     
     if (time_remaining < 0)
       time_remaining = 0;               // taking too long to read!
     
     last_read_duration = read_duration;
     
-    real_nano_sleep(time_remaining);   // interval minus time it took to read sensors
+    nano_sleep(time_remaining);   // interval minus time it took to read sensors
   }
   
   fclose(i2c_log);  

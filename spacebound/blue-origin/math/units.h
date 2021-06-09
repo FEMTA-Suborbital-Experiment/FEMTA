@@ -1,63 +1,59 @@
-#ifndef HEADER_GAURD_UNITS
-#define HEADER_GAURD_UNITS
+#pragma once
 
-#include <stdbool.h>
+/**
+ * @Attribute #1 Raw sensor readings are converted to sensor "measures"
+ * through output-specific "series". A series is a linked list of computational
+ * steps that must be performed to take each unit to the next. Some of these 
+ * are known by the Exp compiler, such as the conversion from Celcius to 
+ * Fahrenheit. Such known steps are known as "conversions". Others, such as 
+ * leaps from one unit type like Voltage to another like Pressure, require 
+ * a user-provided step known as a "calibration". Thus, each data stream is 
+ * organized as follows:
+ *   
+ *   Raw  -->  Conversion & Calibration Series  -->  Measure
+ *   
+ *   Measure  =  (Conversion | Calibration)+  on  ( Raw )
+ * 
+ * @Invariant #3 Numerics always have a "units" name, even generic ints and
+ * floats, which use 'i' and 'f', respectively. These names must never exceed
+ * 7 characters.
+ * 
+ * @Invariant #4 Numerics, when used in a series, must be in float form.
+ * 
+ **/
 
-#include "../sensors/sensor.h"
-#include "../structures/list.h"
-
-typedef float (* Conversion)(float value);
+#include "../include/headers.h"
 
 typedef struct Numeric {
   
   union {
-    int   integer;    // the numerical value 
-    float decimal;    // -------------------
+    int   integer;               // the numerical value 
+    float decimal;               // -------------------
   };
   
-  char units[8];      // the units code
-  bool is_decimal;    // representation
+  char units[8];                 // the units code
+  bool is_decimal;               // representation
   
 } Numeric;
 
 typedef struct Calibration {
   
-  char * curve;        // the type of curve used to compute values
-  List * constants;    // the constants defining the curve
-  char * target;       // data stream calibration acts on
-  char * unit_from;    // the unit from which to convert
-  char * unit_to;      // the unit to which to convert
+  char * curve;                  // the shape of the curve used to compute values
+  List * constants;              // the constants defining the curve
+  char * target;                 // the data stream the calibration acts on
+  char * unit_from;              // the unit from which to convert
+  char * unit_to;                // the unit to which to convert
+  bool   used;                   // whether a series is using this
   
 } Calibration;
 
 typedef struct SeriesElement {
   
-  bool universal;
+  bool universal;                // whether this is a conversion or calibration
   
   union {
-    Calibration * calibration;   // if sensor specific
-    Conversion    conversion;    // if universal conversion (Ex: Celcius to Fahrenheit)
+    Calibration * calibration;   // used if sensor specific      (Ex: ds32's raw to ms     )
+    Conversion    conversion;    // used if universal conversion (Ex: Celcius to Fahrenheit)
   };
   
 } SeriesElement;
-
-void init_units();
-void drop_units();
-void print_units_supported();
-bool unit_is_supported(char * unit_name);
-bool unit_is_of_type(Numeric * numeric, char * type_name);
-
-Numeric * numeric_from_decimal(float decimal);
-Numeric * numeric_from_integer(float integer);
-
-Conversion get_universal_conversion(char * from, char * to);
-
-SeriesElement * series_element_from_conversion(Conversion conversion);
-SeriesElement * series_element_from_calibration(Calibration * calibration);
-
-float series_compute(List * series, float x);
-void  series_destroy(List * series);
-
-float convert_identity(float x);
-
-#endif

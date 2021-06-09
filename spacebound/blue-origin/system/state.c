@@ -1,117 +1,101 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#include "../include/program.h"
 
-#include "color.h"
-#include "state.h"
+local State * states;                                   // all the states
+local int     n_states;                                 // the number of states
+local State * mission_complete;                         // special state marking end of program
 
-#include "../sensors/sensor.h"
-#include "../structures/hashmap.h"
-
-static Hashmap * states;    // maps string names to bools
-
-void init_states() {
-  states       = hashmap_create(hash_string, compare_strings, key_free, 16);
-  state_delays = hashmap_create(hash_string, compare_strings,     NULL, 16);    // value_free
-}
-
-void drop_states() {
-  hashmap_destroy(states);
-  states = NULL;
+void drop_states() {                                    // remove all states
   
-  hashmap_destroy(state_delays);
-  state_delays = NULL;
+  for (int i = 0; i < n_states; i++)
+    blank(states[i].name);
+  
+  blank(states);
 }
 
-void add_state(char * state, bool entered) {
-  hashmap_add(states, state, (void *) entered);
+State * state_create(char * name, bool enter) {         // create and track a new state
+  
+  states = realloc(states, (n_states + 1) * sizeof(*states));
+  
+  memset(states + n_states * sizeof(*states), 0, sizeof(*states));
+  
+  states[n_states].name    = name;
+  states[n_states].entered = enter;
+  
+  if (!strcmp(name, "mission_complete"))
+    mission_complete = &states[n_states];
+  
+  return &states[n_states++];
 }
 
-bool state_exists(char * state) {
-  return hashmap_exists(states, state);
+State * state_get(char * name) {                        // return a state, if it exists in O(n)
+  
+  for (int i = 0; i < n_states; i++)
+    if (!strcmp(states[i].name, name))
+      return &states[i];
+  
+  return NULL;
 }
 
-void enter_state(char * state) {
+void state_set(State * state, bool enter) {             // set a state
   
   float event_time = time_passed();
   
-  printf(CYAN "%f%s    ntered %s\n" RESET, event_time, time_unit, state);
-  hashmap_update(states, state, (void *) true);
+  if (enter) printf(CYAN "%7.3f%s    enter %s\n" RESET, event_time, time_unit, state -> name);
+  else       printf(CYAN "%7.3f%s    leave %s\n" RESET, event_time, time_unit, state -> name);
   
-  fprintf(schedule -> control_log, "%f%s\tstate\t%s\tenter\n", event_time, time_unit, state);
+  if (enter) fprintf(schedule -> control_log, "%f%s\tstate\t%s\tenter\n", event_time, time_unit, state -> name);
+  else       fprintf(schedule -> control_log, "%f%s\tstate\t%s\tleave\n", event_time, time_unit, state -> name);
+  
+  state -> entered = enter;
 }
 
-void leave_state(char * state) {
+void state_queue(StateChange * change, bool enter) {    // queue a state change, if necessary
   
-  float event_time = time_passed();
-  
-  printf(CYAN "%f%s    left %s\n" RESET, event_time, time_unit, state);
-  hashmap_update(states, state, (void *) false);
-  
-  fprintf(schedule -> control_log, "%f%s\tstate\t%s\tleave\n", event_time, time_unit, state);
-}
-
-void enter(Transition * trans) {
-
-  if (!trans -> delay) {
-    enter_state(trans -> state);
+  if (!change -> delay) {
+    state_set(change -> state, enter);
     return;
   }
   
-  StateDelay * state_delay = hashmap_get(state_delays, trans -> state);
-  state_delay -> ms_remaining = trans -> delay;
-  state_delay -> entering = true;
+  change -> state -> queued_delay = change -> delay;
+  change -> state -> queued_enter = enter;
 }
 
-void leave(Transition * trans) {
+void process_state_queue(int duration) {                // process any delayed state changes
   
-  if (!trans -> delay) {
-    leave_state(trans -> state);
-    return;
-  }
-  
-  StateDelay * state_delay = hashmap_get(state_delays, trans -> state);
-  state_delay -> ms_remaining = trans -> delay;
-  state_delay -> entering = false;
-}
-
-bool state_get(char * state) {
-  return (bool) hashmap_get(states, state);
-}
-
-void state_inform_delays(char * state) {
-  // make it known that this state can delay
-  
-  if (!hashmap_exists(state_delays, state)) {
+  for (int i = 0; i < n_states; i++) {
     
-    StateDelay * state_delay = calloc(1, sizeof(*state_delay));
+    State * state = &states[i];
     
-    state_delay -> state = state;
+    when (state -> queued_delay);
     
-    hashmap_add(state_delays, state, state_delay);
+    state -> queued_delay -= duration;
+    
+    when (state -> queued_delay <= 0);
+    
+    state_set(state, state -> queued_enter);
+    state -> queued_delay = 0;
   }
 }
 
-
-Transition * transition_create(char * state, int delay) {
+void wait_on_mission() {
   
-  Transition * transition = calloc(1, sizeof(*transition));
+  if (!mission_complete)
+    exit_printing(ERROR_EXPERIMENTER, 
+                  "Without manual control or a 'mission_complete' state, there's no way for the process to exit!");
   
-  transition -> state = state;
-  transition -> delay = delay;
-  
-  return transition;
+  while (!mission_complete -> entered)    // check for mission termination every 5s
+    micro_sleep(5000000);                 // --------------------------------------
+  micro_sleep(1000000);
 }
 
-void print_all_states() {
+void print_all_states() {                               // nicely print all the states
   
   printf(GREEN "States\n    " RESET);
   
-  for (iterate(states -> keys, char *, name)) {
-    if ((bool) hashmap_get(states, name)) printf(YELLOW "+" RESET "%s ", name);
-    else                                  printf(YELLOW "-" RESET "%s ", name);
-  }
+  for (int i = 0; i < n_states; i++)
+    if (states[i].entered) printf(YELLOW "+" RESET "%s ", states[i].name);
+    else                   printf(YELLOW "-" RESET "%s ", states[i].name);
   
-  printf("\n\n");
+  printf("\n");
 }

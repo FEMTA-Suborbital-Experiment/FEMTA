@@ -1,37 +1,22 @@
 
-#include <time.h>
+#include "../include/program.h"
 
-#include "clock.h"
-
-
-void real_sleep(time_t seconds) {
-
-  struct timespec time_period;
-  time_period.tv_sec  = seconds;
-  time_period.tv_nsec = 0;
+void nano_sleep(long ns) {                       // sleep a number of ns using the real-time patch
+  
+  struct timespec time_period = { 0, ns };
   
   clock_nanosleep(CLOCK_REALTIME, 0, &time_period, NULL);
 }
 
-void real_nano_sleep(long ns) {
-
-  struct timespec time_period;
-  time_period.tv_sec  = 0;
-  time_period.tv_nsec = ns;
-
-  clock_nanosleep(CLOCK_REALTIME, 0, &time_period, NULL);
+void micro_sleep(long us) {                      // sleep a number of us using the real-time patch
+  nano_sleep(us * 1000l);
 }
 
-void real_milli_sleep(long ms) {
-  real_nano_sleep(ms * 1E6);
-}
-
-
-long real_time_diff(struct timespec * past) {
+long real_time_diff(struct timespec * past) {    // ns since point in the past
   
   struct timespec now;
-
+  
   clock_gettime(CLOCK_REALTIME, &now);
-
-  return (now.tv_sec - past->tv_sec) * 1E9 + (now.tv_nsec - past->tv_nsec);
+  
+  return (now.tv_sec - past->tv_sec) * 1000000000l + (now.tv_nsec - past->tv_nsec);
 }
