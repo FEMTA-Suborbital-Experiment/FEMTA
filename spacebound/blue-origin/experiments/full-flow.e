@@ -58,12 +58,12 @@ Sensor ad15_vdd 5Hz {
     -0.389869854380195
    ];
 
-  [calibrate   | prop1, poly, raw, V | 0.00041234314, -0.00198277794];
-  [calibrate   | prop2, poly, raw, V | 0.00041234314, -0.00198277794];
-  [conversions | prop1, raw, V, kPa  |                              ];
-  [conversions | prop2, raw, V, kPa  |                              ];
-  [print       | salmon, prop        | 3                            ];
-  [print       | mint, collection    | 3                            ];
+  [calibrate   | prop, poly, raw, V       | 0.00041234314, -0.00198277794];
+  [calibrate   | collection, poly, raw, V | 0.00041234314, -0.00198277794];
+  [conversions | prop, raw, V, kPa        |                              ];
+  [conversions | collection, raw, V, kPa  |                              ];
+  [print       | salmon, prop             | 3                            ];
+  [print       | mint, collection         | 3                            ];
 
   if (State start | collection > 0kPa) {
 
