@@ -107,6 +107,7 @@ void init_sensors() {
   Hashmap * ds32_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
   Hashmap * ds18_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
   Hashmap * mcp9_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
+  Hashmap * hscm_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
   Hashmap * slf3_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
   Hashmap * test_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 5);
   Hashmap * veml_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
@@ -117,6 +118,9 @@ void init_sensors() {
   hashmap_add(ds18_tar, "Temperature", (void *) (int) DS18_MEASURE_TEMPERATURE);
   
   hashmap_add(mcp9_tar, "Temperature", (void *) (int) MCP9_MEASURE_TEMPERATURE);
+
+  hashmap_add(hscm_tar, "Pressure"   , (void *) (int) HSCM_MEASURE_PRESSURE   );
+  hashmap_add(hscm_tar, "Temperature", (void *) (int) HSCM_MEASURE_TEMPERATURE);
   
   hashmap_add(test_tar, "zero"       , (void *) (int) TEST_MEASURE_ZERO       );
   hashmap_add(test_tar, "identity"   , (void *) (int) TEST_MEASURE_IDENTITY   );
@@ -148,6 +152,7 @@ void init_sensors() {
   hashmap_add(all_sensors, "ds32"      , sensor_create("ds32"      , DS32_ADDRESS, ds32_tar, I2C_BUS));
   hashmap_add(all_sensors, "ds18"      , sensor_create("ds18"      ,            0, ds18_tar, ONE_BUS));
   hashmap_add(all_sensors, "mcp9"      , sensor_create("mcp9"      , MCP9_ADDRESS, mcp9_tar, I2C_BUS));
+  hashmap_add(all_sensors, "hscm"      , sensor_create("hscm"      , HSCM_ADDRESS, hscm_tar, I2C_BUS));
   hashmap_add(all_sensors, "arm6"      , sensor_create("arm6"      , FAKE_ADDRESS, arm6_tar, I2C_BUS));
   hashmap_add(all_sensors, "test"      , sensor_create("test"      , FAKE_ADDRESS, test_tar, I2C_BUS));
   hashmap_add(all_sensors, "veml"      , sensor_create("veml"      , VEML_ADDRESS, veml_tar, I2C_BUS));
@@ -159,7 +164,7 @@ void init_sensors() {
   hashmap_add(all_sensors, "ad15_scl"  , sensor_create("ad15_scl"  ,     AD15_SCL, ad15_tar, I2C_BUS));
   
   all_target_maps = 
-    list_from(9, adxl_tar, ad15_tar, arm6_tar, ds32_tar, ds18_tar, mcp9_tar, slf3_tar, test_tar, veml_tar);
+    list_from(9, adxl_tar, ad15_tar, arm6_tar, ds32_tar, ds18_tar, mcp9_tar, hscm_tar, slf3_tar, test_tar, veml_tar);
   
   all_target_maps -> value_free = vhashmap_delete;
   

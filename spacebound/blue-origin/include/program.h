@@ -119,6 +119,7 @@ extern  Sensor * init_arm6(Sensor * proto              );
 extern  Sensor * init_ds18(Sensor * proto, char * path );
 extern  Sensor * init_ds32(Sensor * proto              );
 extern  Sensor * init_mcp9(Sensor * proto              );
+extern  Sensor * init_hscm(Sensor * proto              );
 extern  Sensor * init_slf3(Sensor * proto              );
 extern  Sensor * init_test(Sensor * proto              );
 extern  Sensor * init_veml(Sensor * proto              );

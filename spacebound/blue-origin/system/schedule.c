@@ -93,6 +93,15 @@ void build_schedule() {
     list_insert(active_sensors         , mcp9       );
     list_insert(schedule -> i2c_devices, mcp9 -> i2c);
   }
+
+  // hscm
+  proto = hashmap_get(all_sensors, "hscm");
+
+  if (proto -> requested) {
+    Sensor * hscm = init_hscm(proto);
+    list_insert(active_sensors         , hscm       );
+    list_insert(schedule -> i2c_devices, hscm -> i2c);
+  }
   
   // test
   proto = hashmap_get(all_sensors, "test");
