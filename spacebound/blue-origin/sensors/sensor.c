@@ -164,7 +164,7 @@ void init_sensors() {
   hashmap_add(all_sensors, "ad15_scl"  , sensor_create("ad15_scl"  ,     AD15_SCL, ad15_tar, I2C_BUS));
   
   all_target_maps = 
-    list_from(9, adxl_tar, ad15_tar, arm6_tar, ds32_tar, ds18_tar, mcp9_tar, hscm_tar, slf3_tar, test_tar, veml_tar);
+    list_from(10, adxl_tar, ad15_tar, arm6_tar, ds32_tar, ds18_tar, mcp9_tar, hscm_tar, slf3_tar, test_tar, veml_tar);
   
   all_target_maps -> value_free = vhashmap_delete;
   
