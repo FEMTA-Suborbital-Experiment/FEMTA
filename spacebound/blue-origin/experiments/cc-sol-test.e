@@ -35,15 +35,15 @@ Sensor ad15_vdd 1Hz {
     [calibrate   | CC, poly, raw, V | 0.00041234314, -0.00198277794];
     [conversions | CC, raw, V, kPa  |                              ];
     [print       | mint, CC         | 3                            ];
-	
-	
-	if (State test) {
-		// Open solenoid after delay
-		set pin 16 pos after 120s; // Change time until solenoid opens here and next line
-		set pin 12 neg after 120s;
-		set pin 16 neg after 350ms;
-		
-		leave test;
-		enter complete after 1s;
-	}
+    
+    
+    if (State test | CC > 0kPa) {
+        // Open solenoid after delay
+        set pin 16 pos after 120s; // Change time until solenoid opens here and next line
+        set pin 12 neg after 120s;
+        set pin 16 neg after 350ms;
+        
+        leave test;
+        enter complete after 1s;
+    }
 }
