@@ -29,8 +29,8 @@ Contains the main project. Files are usually the most recent versions of each pr
 ### [virtual][6]
 Contains all test scripts for terminal interfacing. Execute virtual/256-color-test.sh to check color compatibility.
 
-[2]:https://github.com/Noah-Franks/FEMTA/tree/master/organization   "Go to directory"
-[3]:https://github.com/Noah-Franks/FEMTA/tree/master/physical   "Go to directory"
-[4]:https://github.com/Noah-Franks/FEMTA/tree/master/scratch    "Go to directory"
-[5]:https://github.com/Noah-Franks/FEMTA/tree/master/spacebound "Go to directory"
-[6]:https://github.com/Noah-Franks/FEMTA/tree/master/virtual    "Go to directory"
+[2]:https://github.com/FEMTA-Suborbital-Experiment/FEMTA/tree/master/organization   "Go to directory"
+[3]:https://github.com/FEMTA-Suborbital-Experiment/FEMTA/tree/master/physical   "Go to directory"
+[4]:https://github.com/FEMTA-Suborbital-Experiment/FEMTA/tree/master/scratch    "Go to directory"
+[5]:https://github.com/FEMTA-Suborbital-Experiment/FEMTA/tree/master/spacebound "Go to directory"
+[6]:https://github.com/FEMTA-Suborbital-Experiment/FEMTA/tree/master/virtual    "Go to directory"
