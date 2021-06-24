@@ -69,7 +69,7 @@ bool i2c_read_bytes(i2c_device * dev, uint8 reg, uint8 * buf, char n) {    // re
 
 bool i2c_raw_read(i2c_device * dev, uint8 * buf, char n) {                 // read up to 32 bytes, without 
                                                                            // specifying a particular register
-  if (i2cReadDevice(dev -> handle, buf, n)) {
+  if (i2cReadDevice(dev -> handle, buf, n) < 0) {
     print_error("Could not read raw bytes from " YELLOW "%s\n", dev -> sensor -> code_name);
     fprintf(schedule -> i2c_error_log, "%f%s\tread\t----\t%d\n", time_passed(), time_unit, n);
     return false;

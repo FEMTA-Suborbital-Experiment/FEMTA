@@ -18,6 +18,13 @@ Sensor ds32 1Hz {
   [conversions | Time, raw, s       |                  ];
 }
 
+Sensor slf3_left 5Hz {
+
+  [calibrate   | Flow, poly, raw, mLpmin | 1, 0];
+  [conversions | Flow, raw, mLpmin       |     ];
+  [print       | white, Flow             | 3   ];
+
+}
 
 Sensor ad15_vdd 5Hz {
 
@@ -77,24 +84,24 @@ Sensor ad15_vdd 5Hz {
     set pin 14 neg after 350ms;
 
     // close solenoid
-    set pin 16 pos;
+    set pin 21 pos;
     set pin 12 neg;
-    set pin 16 neg after 350ms;
+    set pin 21 neg after 350ms;
 
     leave start;
     enter ascent after 1s;
   }
 
-  if (State ascent | collection < 27kPa) {
+  if (State ascent | collection < 0.5kPa) {
     // close the vent valve
     set pin 15 pos;
     set pin 14 neg;
     set pin 15 neg after 350ms;
 
-    // open solenoid after 2 seconds
-    set pin 12 pos after 2000ms;
-    set pin 16 neg after 2000ms;
-    set pin 12 neg after 2350ms;
+    // open solenoid after 60 seconds
+    set pin 12 pos after 60000ms;
+    set pin 21 neg after 60000ms;
+    set pin 12 neg after 60350ms;
 
     leave ascent;
     enter test after 30s;  // end test after a half minute
@@ -102,9 +109,9 @@ Sensor ad15_vdd 5Hz {
 
   if (State test | collection > 0kPa) {
     // close solenoid
-    set pin 16 pos;
+    set pin 21 pos;
     set pin 12 neg;
-    set pin 16 neg after 350ms;
+    set pin 21 neg after 350ms;
 
     leave test;
     enter descent after 1s;

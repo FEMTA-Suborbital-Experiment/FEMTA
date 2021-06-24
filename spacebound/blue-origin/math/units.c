@@ -68,7 +68,7 @@ float convert_identity (float x)  {
 void init_units() {
   
   conversions = hashmap_create(hash_string, compare_strings, NULL, NULL, 26);
-  unit_types  = hashmap_create(hash_string, compare_strings, NULL, NULL, 16);
+  unit_types  = hashmap_create(hash_string, compare_strings, NULL, NULL, 27);
   
   hashmap_add(conversions, arrow(   C,    K), take(   C,    K));
   hashmap_add(conversions, arrow(   K,    C), take(   K,    C));
@@ -106,35 +106,35 @@ void init_units() {
   hashmap_add(conversions, arrow(  mA,    A), take(  mA,    A));
   
   
-  hashmap_add(unit_types,    "C", "Temperature");
-  hashmap_add(unit_types,    "K", "Temperature");
-  hashmap_add(unit_types,    "F", "Temperature");
-  hashmap_add(unit_types,  "atm",    "Pressure");
-  hashmap_add(unit_types,  "kPa",    "Pressure");
-  hashmap_add(unit_types, "torr",    "Pressure");
-  hashmap_add(unit_types,    "V",     "Voltage");
-  hashmap_add(unit_types,   "mV",     "Voltage");
-  hashmap_add(unit_types,    "s",        "Time");
-  hashmap_add(unit_types,   "ms",        "Time");
-  hashmap_add(unit_types,  "min",        "Time");
-  hashmap_add(unit_types,    "%",  "Proportion");
-  hashmap_add(unit_types,    "i",     "Integer");
-  hashmap_add(unit_types,    "f",     "Decimal");
-  hashmap_add(unit_types,    "B",     "Storage");
-  hashmap_add(unit_types,  "Ohm",  "Resistance");
-  hashmap_add(unit_types, "kOhm",  "Resistance");
-  hashmap_add(unit_types,    "m",      "Length");
-  hashmap_add(unit_types,   "ft",      "Length");
-  hashmap_add(unit_types,   "kg",        "Mass");
-  hashmap_add(unit_types,  "lbs",        "Mass");
-  hashmap_add(unit_types,   "cd",   "Intensity");
-  hashmap_add(unit_types,    "A",     "Current");
-  hashmap_add(unit_types,   "mA",     "Current");
-  hashmap_add(unit_types,  "mol",    "Quantity");
-  
+  hashmap_add(unit_types,      "C", "Temperature");
+  hashmap_add(unit_types,      "K", "Temperature");
+  hashmap_add(unit_types,      "F", "Temperature");
+  hashmap_add(unit_types,    "atm",    "Pressure");
+  hashmap_add(unit_types,    "kPa",    "Pressure");
+  hashmap_add(unit_types,   "torr",    "Pressure");
+  hashmap_add(unit_types,      "V",     "Voltage");
+  hashmap_add(unit_types,     "mV",     "Voltage");
+  hashmap_add(unit_types,      "s",        "Time");
+  hashmap_add(unit_types,     "ms",        "Time");
+  hashmap_add(unit_types,    "min",        "Time");
+  hashmap_add(unit_types,      "%",  "Proportion");
+  hashmap_add(unit_types,      "i",     "Integer");
+  hashmap_add(unit_types,      "f",     "Decimal");
+  hashmap_add(unit_types,      "B",     "Storage");
+  hashmap_add(unit_types,    "Ohm",  "Resistance");
+  hashmap_add(unit_types,   "kOhm",  "Resistance");
+  hashmap_add(unit_types,      "m",      "Length");
+  hashmap_add(unit_types,     "ft",      "Length");
+  hashmap_add(unit_types,     "kg",        "Mass");
+  hashmap_add(unit_types,    "lbs",        "Mass");
+  hashmap_add(unit_types,     "cd",   "Intensity");
+  hashmap_add(unit_types,      "A",     "Current");
+  hashmap_add(unit_types,     "mA",     "Current");
+  hashmap_add(unit_types,    "mol",    "Quantity");
+  hashmap_add(unit_types, "mLpmin",    "Flowrate");
   
   all_units = list_from
-    (26, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min", "%", "B", "KB", "MB", "Ohm", "kOhm", "m", "ft", "kg", "lbs", "cd", "A", "mA", "mol");
+    (27, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min", "%", "B", "KB", "MB", "Ohm", "kOhm", "m", "ft", "kg", "lbs", "cd", "A", "mA", "mol", "mLpmin");
 }
 
 void drop_units() {
@@ -185,9 +185,9 @@ void print_units_supported() {
      "Amount                       LightIntensity      \n"
      " mol  : Moles                   cd  : Candelas   \n"
      
-     "Voltage              \n"
-     "   V   : Volts       \n"
-     "  mV   : milli-Volts \n"
+     "Voltage                      Flowrate            \n"
+     "   V   : Volts                mLpmin: milli-Liters per minute\n"
+     "  mV   : milli-Volts                             \n"
      );
 }
 

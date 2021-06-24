@@ -9,7 +9,8 @@ Sensor * init_slf3(Sensor * slf3) {
   slf3 -> i2c  = create_i2c_device(slf3, read_slf3, "A flowmeter");
 
   sleep(0.5);
-  if (!i2c_write_byte(slf3 -> i2c, 0x36, 0x08)) return false;    // start reading water
+  //if (!i2c_write_byte(slf3 -> i2c, 0x36, 0x08)) return false;    // start reading water
+  i2c_write_byte(slf3 -> i2c, 0x36, 0x08);
   sleep(0.5);
   
   //while (i2cWriteByteData(handle, 0x36, 0x08) < 0) {
@@ -30,12 +31,13 @@ bool read_slf3(i2c_device * slf3_i2c) {
 
   // Flow rate scale factor: 500 (mL/min)^-1
   int flow = (read_raws[1] | (read_raws[0] << 8));
-  if (flow > 32767) {
-    fflow = ((read_raws[1] ^ 0x3F) | ((read_raws[0] << 8) ^ 0x3F) | 0x01) / 500.0f;
-  }
-  else {
-    fflow = (read_raws[1] | (read_raws[0] << 8)) / 500.0f;
-  }
+  //if (flow > 32767) {
+  //  fflow = ((read_raws[1] ^ 0x3F) | ((read_raws[0] << 8) ^ 0x3F) | 0x01) / 500.0f;
+  //}
+  //else {
+  fflow = flow / 500.0f;
+  if (fflow > 131.0) fflow -= 131.0;
+    //}
   // Temperature scale factor: 200 (deg C)^-1
   float temp = (read_raws[4] | (read_raws[3] << 8)) / 200.0f;
   int flag = read_raws[7] | (read_raws[6] << 8);
