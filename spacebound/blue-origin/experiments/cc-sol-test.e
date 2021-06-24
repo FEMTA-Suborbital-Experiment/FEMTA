@@ -39,9 +39,9 @@ Sensor ad15_vdd 1Hz {
     
     if (State test | CC > 0kPa) {
         // Open solenoid after delay
-        set pin 16 pos after 120s; // Change time until solenoid opens here and next line
+        set pin 16 pos after 120s; // Change time until solenoid opens here and next two lines
         set pin 12 neg after 120s;
-        set pin 16 neg after 350ms;
+        set pin 16 neg after 120.35s;
         
         leave test;
         enter complete after 1s;
