@@ -10,6 +10,7 @@
 
 
 define enter test;
+define leave cleanup;
 define leave complete;
 
 
@@ -38,12 +39,27 @@ Sensor ad15_vdd 1Hz {
     
     
     if (State test | CC > 0kPa) {
+        // Make sure solenoid starts closed
+        set pin 12 pos;
+        set pin 16 neg;
+        set pin 12 neg after 0.35s;
+        
         // Open solenoid after delay
         set pin 16 pos after 120s; // Change time until solenoid opens here and next two lines
         set pin 12 neg after 120s;
         set pin 16 neg after 120.35s;
         
         leave test;
+        enter cleanup after 30s;
+    }
+    
+    if (State cleanup) {
+        // Close solenoid
+        set pin 12 pos;
+        set pin 16 neg;
+        set pin 12 neg after 0.35s;
+        
+        leave cleanup;
         enter complete after 1s;
     }
-}
+}        
