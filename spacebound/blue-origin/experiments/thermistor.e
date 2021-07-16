@@ -12,35 +12,36 @@ define enter start;
 
 Sensor ad15_vcc 1Hz { //vcc is placeholder adc. thermistors may be connected to different adc
 
- where A0 is thermistor1 //thermistors may be connected to different ports A0-A3 for this adc or they might be spread out among other adcs
- where A1 is thermistor2
- where A2 is thermistor3
- where A3 is thermistor4
+ where A0 is thermistor1; //thermistors may be connected to different ports A0-A3 for this adc or they might be spread out among other adcs
+ where A1 is thermistor2;
+ where A2 is thermistor3;
+ where A3 is thermistor4;
  
- [calibrate   | thermistor1, poly, raw, V | 1 0 ]  //placeholder calibration curve, get from electronics, simbox electronics, or simbox software
- [calibrate   | thermistor1, poly, V, C   | -0.0000003
+[calibrate   | thermistor1, poly, raw, V | 1 0 ];  //placeholder calibration curve, get from electronics, simbox electronics, or simbox software
+[calibrate   | thermistor1, poly, V, C   | -0.0000003
                                             -0.000004
                                              0.0023
                                             -0.1077
                                             1.9093
- ]
- [conversions | thermistor1, raw, V, C    |  ]
+];
+[conversions | thermistor1, raw, V, C    |  ];
  
- [calibrate   | thermistor2, poly, raw, V | 1 0 ]
- [conversions | thermistor2, raw, V, C    | -.00002
-                                             .0023
-                                            -.106
+[calibrate   | thermistor2, poly, raw, V | 1 0 ];
+[calibrate   | thermistor2, poly, V, C   | -0.00002
+                                             0.0023
+                                            -0.106
                                             2.003
- ]  
+];
+[conversions | thermistor2, raw, V, C    |  ];
 
- [calibrate   | thermistor3, poly, raw, V | 1 0 ]
- [conversions | thermistor3, raw, V, C    | -.00002
+[calibrate   | thermistor3, poly, raw, V | 1 0 ]
+[conversions | thermistor3, raw, V, C    | -.00002
                                              .0024
                                             -.1074
                                             1.9844
- ]  
+] 
+[conversions | thermistor3, raw, V, C
  
-
 [calibrate   | thermistor4, poly, raw, V | 1 0 ]
 [conversions | thermistor4, raw, V, C    | -.00002
                                             .0025
