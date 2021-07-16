@@ -10,7 +10,7 @@
  
 define enter start;
 
-Sensor ad15_vcc 1Hz { //vcc is placeholder adc. thermistors may be connected to different adc
+Sensor ad15_gnd 1Hz { //vcc is placeholder adc. thermistors may be connected to different adc
 
     where A0 is thermistor1; //thermistors may be connected to different ports A0-A3 for this adc or they might be spread out among other adcs
     where A1 is thermistor2;
@@ -22,21 +22,21 @@ Sensor ad15_vcc 1Hz { //vcc is placeholder adc. thermistors may be connected to 
                                                -0.000004,
                                                 0.0023,
                                                -0.1077,
-                                                1.9093,
+                                                1.9093
     ];
  
     [calibrate   | thermistor2, poly, raw, V | 1, 0 ];
     [calibrate   | thermistor2, poly, V, C   | -0.00002,
                                                 0.0023,
                                                -0.106,
-                                                2.003,
+                                                2.003
     ];
 
     [calibrate   | thermistor3, poly, raw, V | 1, 0 ];
     [calibrate   | thermistor3, poly, V, C   | -0.00002,
                                                 0.0024,
                                                -0.1074,
-                                                1.9844,
+                                                1.9844
     ];
  
     [calibrate   | thermistor4, poly, raw, V | 1, 0 ];
@@ -155,7 +155,7 @@ Sensor ad15_vdd 1Hz {
 }
 
 
-ds32 1Hz { 
+Sensor ds32 1Hz { 
     [calibrate   | Time, poly, raw, s | 0.0009765625, 0.0];
     [conversions | Time, raw, s       |                  ];
 }
