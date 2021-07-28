@@ -5,7 +5,9 @@
 ** description:
 **     Script to be run during the Blue Origin suborbital flight. Controls all
 **     aspects of the FEMTA and propellant management experiments, and logs 
-**     data. Sensing transitions between states must be done resiliently.
+**     data. Determining transitions between states must be done resiliently.
+**
+**     Note: for the flight, change allow_user_input in origin.c to false.
 */
 
 
@@ -70,3 +72,51 @@ define leave meco;
 define leave microgravity;
 define leave descent;
 define leave postflight;
+
+
+Sensor ad15_gnd 100Hz {  // ADC: used for
+
+}
+
+Sensor ad15_vdd 100Hz {  // ADC: used for
+
+}
+
+Sensor ad15_sda 100Hz {  // ADC: used for
+
+}
+
+Sensor ad15_scl 100Hz {  // ADC: used for
+
+}
+
+Sensor adxl 100Hz {  // Accelerometer
+
+}
+
+Sensor ds32 1Hz {  // Real Time Clock
+    [calibrate   | Time, poly, raw, s | 0.0009765625, 0.0];
+    [conversions | Time, raw, s       |                  ];
+}
+
+Sensor hscm 100Hz {  // (Atmospheric) Pressure
+
+}
+
+Sensor mcp9 100Hz {  // Temperature
+
+}
+
+Sensor slf3_left 100Hz {  // Flow
+    [calibrate   | Flow, poly, raw, ml/min | 1.0, 0.0];
+    [conversions | Flow, raw, ml/min       |         ];
+}
+
+Sensor slf3_right 100Hz {  // Flow
+    [calibrate   | Flow, poly, raw, ml/min | 1.0, 0.0];
+    [conversions | Flow, raw, ml/min       |         ];
+}
+
+Sensor veml 100Hz {  // UV
+
+}
