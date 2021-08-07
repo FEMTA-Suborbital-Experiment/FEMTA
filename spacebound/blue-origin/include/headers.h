@@ -68,6 +68,9 @@ typedef struct ListNode ListNode;
 // one.h (system)
 typedef struct one_device one_device;
 
+// spi.h (system)
+typedef struct spi_device spi_device;
+
 // schedule.h (system)
 typedef struct Schedule Schedule;
 
@@ -101,6 +104,9 @@ typedef void (* freer)();
 // one.h (system)
 typedef bool (* one_reader)(one_device * one);
 
+// spi.h (system)
+typedef bool (* spi_reader)(spi_device * spi)
+
 // sensor.h (sensors)
 typedef void (* sensor_free)(Sensor * sensor);
 
@@ -123,6 +129,7 @@ typedef void (* user_action)(void * arg, char * raw_text);
 #include "../sensors/veml.h"
 #include "../sensors/sensor.h"
 #include "../sensors/slf3.h"
+#include "../sensors/eth0.h"
 #include "../sensors/test.h"
 #include "../structures/hashmap.h"
 #include "../structures/list.h"
@@ -132,6 +139,7 @@ typedef void (* user_action)(void * arg, char * raw_text);
 #include "../system/gpio.h"
 #include "../system/i2c.h"
 #include "../system/one.h"
+#include "../system/spi.h"
 #include "../system/schedule.h"
 #include "../system/state.h"
 #include "../.origin/origin.h"

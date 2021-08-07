@@ -13,6 +13,7 @@ void build_schedule() {
   
   int i2c_cycle = -1;
   int one_cycle = -1;
+  int spi_cycle = -1;
   
   for (iterate(all_sensors -> all, Sensor *, proto)) {
     
@@ -29,13 +30,18 @@ void build_schedule() {
     else if (proto -> bus == ONE_BUS)
       if (one_cycle == -1) one_cycle = proto -> hertz_numerator;
       else                 one_cycle = lcm(proto -> hertz_numerator, one_cycle);
+    else if (proto -> bus == SPI_BUS)
+      if (spi_cycle == -1) spi_cycle = proto -> hertz_numerator;
+      else                 spi_cycle = lcm(proto -> hertz_numerator, spi_cycle);
   }
   
   schedule -> i2c_interval = 1000000000l / (schedule -> i2c_cycle = i2c_cycle);
   schedule -> one_interval = 1000000000l / (schedule -> one_cycle = one_cycle);
+  schedule -> spi_interval = 1000000000l / (schedule -> spi_cycle = spi_cycle);
   
   schedule -> i2c_active = i2c_cycle > 0;
   schedule -> one_active = one_cycle > 0;
+  schedule -> spi_active = spi_cycle > 0;
   
   if (schedule -> i2c_active) {
     
@@ -51,6 +57,14 @@ void build_schedule() {
     
     if (interval > 9) printf("Building 1-wire schedule using " GREEN "%dms" RESET " intervals\n", interval);
     else              print_error("1-Wire schedule requires likely unservicable %dms intervals\n", interval);
+  }
+
+  if (schedule -> spi_active) {
+    
+    int interval = schedule -> spi_interval / 1000000;
+    
+    if (interval > 9) printf("Building SPI schedule using " GREEN "%dms" RESET " intervals\n", interval);
+    else              print_error("SPI schedule requires likely unservicable %dms intervals\n", interval);
   }
   
   
@@ -175,6 +189,9 @@ void build_schedule() {
     list_insert(active_sensors,          ds18       );
     list_insert(schedule -> one_devices, ds18 -> one);
   }
+
+
+  /* SPI sensors */
   
   
   /* see if we can disable printing */

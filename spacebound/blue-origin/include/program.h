@@ -85,6 +85,15 @@ extern  void         start_one        (void                                     
 extern  one_device * create_one_device(Sensor * sensor, char * path, char * log_path, one_reader read);
 extern  void         one_close        (one_device * one                                              );
 
+// spi.c (system)
+extern  void         init_spi         (void                                              );
+extern  void         drop_spi         (void                                              );
+extern  void         start_spi        (void                                              );
+extern  spi_device * create_spi_device(Sensor * sensor, spi_reader reader, char * message);
+extern  void         spi_close        (spi_device * spi                                  );
+extern  void         spi_read_bytes   (spi_device * dev, uint8 * buf, char n             );
+extern  void         spi_write_bytes  (spi_device * dev, uint8 * buf, char n             );
+
 // parser.l (parser)
 extern  int    yylex_destroy(void          );
 
@@ -123,12 +132,14 @@ extern  Sensor * init_hscm(Sensor * proto              );
 extern  Sensor * init_slf3(Sensor * proto              );
 extern  Sensor * init_test(Sensor * proto              );
 extern  Sensor * init_veml(Sensor * proto              );
+extern  Sensor * init_eth0(Sensor * proto              );
 
 // simulate.c
 extern  int   return_zero                        (void                       );
 extern  void  print_simulation_info              (void                       );
 extern  bool  simulation_read_i2c                (i2c_device * i2c           );
 extern  bool  simulation_read_one                (one_device * one           );
+/* TODO: Add spi simulated read? (check if used) */
 extern  int   simulation_gpio_read               (uint8 broadcom             );
 extern  int   simulation_gpio_write              (uint8 broadcom, uint8 level);
 extern  bool  simulation_report_containment_error(void * nil, ...            ) opt(noreturn);
