@@ -34,6 +34,7 @@ int main(int nargs, char ** args) {
   init_console();     // set up colorized printing to the console
   init_units();       // set up unit conversions and calibration structures
   init_one();         // set up the 1-wire data structures
+  init_spi();         // set up the spi data structures
   init_i2c();         // set up the i2c data structures
   init_sensors();     // set up sensor info and actions
   
@@ -43,6 +44,7 @@ int main(int nargs, char ** args) {
   
   build_schedule();
   if (schedule -> i2c_active) start_i2c();       // start reading the i2c bus
+  if (schedule -> spi_active) start_spi();       // start reading the spi bus
   if (schedule -> one_active) start_one();       // start reading the 1-wire bus
   
   if (allow_user_input) present_interface();     // give user manual control
@@ -52,10 +54,12 @@ int main(int nargs, char ** args) {
   
   // join with threads
   if (schedule -> i2c_active) pthread_join(*schedule -> i2c_thread, NULL);
+  if (schedule -> spi_active) pthread_join(*schedule -> spi_thread, NULL);
   if (schedule -> one_active) pthread_join(*schedule -> one_thread, NULL);
   
   drop_sensors();     // close and destroy all sensor-related structures
   drop_i2c();         // delete i2c bus structures
+  drop_spi();         // delete spi bus structures
   drop_one();         // delete 1-wire bus structures
   drop_states();      // delete the state system
   drop_units();       // delete unit structures
