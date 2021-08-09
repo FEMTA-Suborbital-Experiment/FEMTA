@@ -1,11 +1,13 @@
 #include "../include/program.h"
 
 #define SPI_BAUD 115200
-#define SPI_FLAGS 0b1010001100  // http://abyz.me.uk/rpi/pigpio/cif.html#spiOpen
+#define SPI_FLAGS 0b10001100  // http://abyz.me.uk/rpi/pigpio/cif.html#spiOpen
+                              // In particular: mode 0, 0; active low CE, 
+                              // GPIO reserved for SPI; main SPI; 4-wire (not 3)
 
 #define SPI_NOT_REGISTERED -1 // spi address available, but not yet registered
 
-local int8 handles[3];  // pigpio handles to spi devices
+local int8 handles[2];  // pigpio handles to spi devices
 
 local void * spi_main();
 
@@ -81,7 +83,7 @@ void init_spi() {                                                  // initialize
   schedule -> spi_devices = list_create();
   schedule -> spi_thread = malloc(sizeof(*schedule -> spi_thread));
 
-  memset(handles, SPI_NOT_REGISTERED, 3);
+  memset(handles, SPI_NOT_REGISTERED, 2);
 
   schedule -> spi_error_log = safe_open("./logs/errors-spi.log", "a");
   fprintf(schedule -> spi_error_log, RED "TIme\tType\tRegister\tBytes\n" RESET);
@@ -150,7 +152,7 @@ void * spi_main() {
 
     for (iterate(schedule -> spi_devices, spi_device *, spi)) {    // read sensors
       
-      if (++spi -> count == (spi -> interval) * (spi -> hertz_denominator) || spi -> reading) {
+      if (++spi -> count == (spi -> interval) * (spi -> hertz_denominator) || spi -> read) {
         
         $(spi, read);
         
@@ -176,5 +178,5 @@ void * spi_main() {
   }
 
   fclose(spi_log);
-  return NULL:
+  return NULL;
 }

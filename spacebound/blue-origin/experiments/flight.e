@@ -74,48 +74,65 @@ define leave descent;
 define leave postflight;
 
 
-Sensor ad15_gnd 100Hz {  // ADC: used for
+Sensor ad15_gnd 100Hz {  // ADC: TEMP 0-3
 
 }
 
-Sensor ad15_vdd 100Hz {  // ADC: used for
+
+Sensor ad15_vdd 100Hz {  // ADC: PRES 0-3
 
 }
 
-Sensor ad15_sda 100Hz {  // ADC: used for
+
+Sensor ad15_sda 100Hz {  // ADC: IR0, IR1
 
 }
 
-Sensor ad15_scl 100Hz {  // ADC: used for
+
+/*
+Sensor ad15_scl 100Hz {  // ADC: currently unused
 
 }
+*/
+
 
 Sensor adxl 100Hz {  // Accelerometer
 
 }
+
 
 Sensor ds32 1Hz {  // Real Time Clock
     [calibrate   | Time, poly, raw, s | 0.0009765625, 0.0];
     [conversions | Time, raw, s       |                  ];
 }
 
+
+Sensor eth0 10Hz {  // Ethernet Interface (Flight State)
+
+}
+
+
 Sensor hscm 100Hz {  // (Atmospheric) Pressure
 
 }
 
+
 Sensor mcp9 100Hz {  // Temperature
 
 }
+
 
 Sensor slf3_left 100Hz {  // Flow
     [calibrate   | Flow, poly, raw, ml/min | 1.0, 0.0];
     [conversions | Flow, raw, ml/min       |         ];
 }
 
+
 Sensor slf3_right 100Hz {  // Flow
     [calibrate   | Flow, poly, raw, ml/min | 1.0, 0.0];
     [conversions | Flow, raw, ml/min       |         ];
 }
+
 
 Sensor veml 100Hz {  // UV
 

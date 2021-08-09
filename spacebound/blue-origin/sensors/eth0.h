@@ -18,3 +18,4 @@
 #include "../include/headers.h"
 
 #define ETH0_MEASURE_STATE 0
+#define ETH0_CHANNEL       0
