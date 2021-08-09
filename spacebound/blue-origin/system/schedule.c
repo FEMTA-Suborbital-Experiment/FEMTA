@@ -24,15 +24,16 @@ void build_schedule() {
     proto -> hertz_numerator   /= simplifier;                     // simplify the rational
     proto -> hertz_denominator /= simplifier;                     // ---------------------
     
-    if (proto -> bus == I2C_BUS)
+    if (proto -> bus == I2C_BUS) {
       if (i2c_cycle == -1) i2c_cycle = proto -> hertz_numerator;
       else                 i2c_cycle = lcm(proto -> hertz_numerator, i2c_cycle);
-    else if (proto -> bus == ONE_BUS)
+    } else if (proto -> bus == ONE_BUS) {
       if (one_cycle == -1) one_cycle = proto -> hertz_numerator;
       else                 one_cycle = lcm(proto -> hertz_numerator, one_cycle);
-    else if (proto -> bus == SPI_BUS)
+    } else if (proto -> bus == SPI_BUS) {
       if (spi_cycle == -1) spi_cycle = proto -> hertz_numerator;
       else                 spi_cycle = lcm(proto -> hertz_numerator, spi_cycle);
+    }
   }
   
   schedule -> i2c_interval = 1000000000l / (schedule -> i2c_cycle = i2c_cycle);

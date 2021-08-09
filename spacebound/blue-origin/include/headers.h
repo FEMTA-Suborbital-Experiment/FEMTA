@@ -105,7 +105,7 @@ typedef void (* freer)();
 typedef bool (* one_reader)(one_device * one);
 
 // spi.h (system)
-typedef bool (* spi_reader)(spi_device * spi)
+typedef bool (* spi_reader)(spi_device * spi);
 
 // sensor.h (sensors)
 typedef void (* sensor_free)(Sensor * sensor);

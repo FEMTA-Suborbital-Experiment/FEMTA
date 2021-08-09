@@ -91,8 +91,8 @@ extern  void         drop_spi         (void                                     
 extern  void         start_spi        (void                                              );
 extern  spi_device * create_spi_device(Sensor * sensor, spi_reader reader, char * message);
 extern  void         spi_close        (spi_device * spi                                  );
-extern  void         spi_read_bytes   (spi_device * dev, uint8 * buf, char n             );
-extern  void         spi_write_bytes  (spi_device * dev, uint8 * buf, char n             );
+extern  bool         spi_read_bytes   (spi_device * dev, uint8 * buf, char n             );
+extern  bool         spi_write_bytes  (spi_device * dev, uint8 * buf, char n             );
 
 // parser.l (parser)
 extern  int    yylex_destroy(void          );
