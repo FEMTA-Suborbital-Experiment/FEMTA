@@ -165,7 +165,7 @@ void init_sensors() {
   hashmap_add(all_sensors, "ad15_vdd"  , sensor_create("ad15_vdd"  ,     AD15_VDD, ad15_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_sda"  , sensor_create("ad15_sda"  ,     AD15_SDA, ad15_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_scl"  , sensor_create("ad15_scl"  ,     AD15_SCL, ad15_tar, I2C_BUS));
-  hashmap_add(all_sensors, "eth0"      , sensor_create("eth0"      ,/* VERIFY */0, eth0_tar, SPI_BUS));
+  hashmap_add(all_sensors, "eth0"      , sensor_create("eth0"      , ETH0_CHANNEL, eth0_tar, SPI_BUS));
   
   all_target_maps = 
     list_from(11, adxl_tar, ad15_tar, arm6_tar, ds32_tar, ds18_tar, eth0_tar, mcp9_tar, hscm_tar, slf3_tar, test_tar, veml_tar);
@@ -210,7 +210,7 @@ void flip_print(void * nil, char * raw_text) {
 void bind_stream(Sensor * sensor, float reading, int stream) {
   // processes a reading
   
-  Output * output = &sensor -> outputs[stream];
+  Output * output = &(sensor -> outputs[stream]);
   
   output -> measure = series_compute(output -> series, reading);
   
