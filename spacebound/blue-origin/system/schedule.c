@@ -193,6 +193,15 @@ void build_schedule() {
 
 
   /* SPI sensors */
+
+  // eth0
+  proto = hashmap_get(all_sensors, "eth0");
+
+  if (proto -> requested) {
+    Sensor * eth0 = init_eth0(proto);
+    list_insert(active_sensors         , eth0       );
+    list_insert(schedule -> spi_devices, eth0 -> spi);
+  }
   
   
   /* see if we can disable printing */
