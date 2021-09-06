@@ -37,7 +37,7 @@
 **     begin the experiment. The transition to this phase will likely come from
 **     UDP data, sanity-checked by acceleration, atmospheric pressure, and
 **     the elapsed time since launch. In this state, the collection chamber
-**     solenoid will be opened, then after a short delay, the run/flow valves
+**     solenoid will be closed, then after a short delay, the run/flow valves
 **     will be opened. It is to be determined whether the FEMTA experiment will
 **     be started here, or later in the flight. (The propellant management 
 **     experiment is the priority for this flight, and there is a small risk
