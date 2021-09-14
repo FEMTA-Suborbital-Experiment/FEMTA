@@ -19,9 +19,13 @@ define leave postflight
 // Define action states to enter and immediately leave the state when a
 // conditional is met. Only dependent on state only
 define enter start
-define leave microgravity_end
+// define leave microgravity_end
 define leave launch
 define leave cleanup
+
+// Define transition state to help with transitions between loiter states
+// That way, conditionals only evaluate once
+define leave transition
 
 // Notes and questions for state pairs
 // Define state transitions at the end of action states?
@@ -54,15 +58,17 @@ Sensor mcp9 100Hz {  // Temperature
 
 
 Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
-  where A0 is HFE1
-  where A1 is prop
-  where A2 is CC
-  where A3 is HFE2
+  where A0 is HFE1;
+  where A1 is prop;
+  where A2 is CC;
+  where A3 is HFE2;
   // A3 and A0 varies depending on where pressure sensors connected, verify with
   // PCBv3 connections
 
-  [calibrate   | HFE, poly, raw, V | 0.00041234314, -0.00198277794];
-  [conversions | HFE, raw, V, kPa  |                              ];
+  [calibrate   | HFE1, poly, raw, V | 0.00041234314, -0.00198277794];
+  [conversions | HFE1, raw, V, kPa  |                              ];
+  [calibrate   | HFE2, poly, raw, V | 0.00041234314, -0.00198277794];
+  [conversions | HFE2, raw, V, kPa  |                              ];
 
   [calibrate | prop, poly, V, kPa |
     -0.00000805518095144006,
@@ -83,48 +89,48 @@ Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
    ];
 
    [print       | blue, HFE1         | 3                            ];
-   [print       | red, prop          | 3                            ];
    [print       | green, CC       | 3                            ];
-   [print       | yellow,HFE2         | 3                            ];
 
   if (State start | CC > 0kPa) {
   // Enter phases of launch, I added
-    enter launch
-    leave launch after 8s
+    enter launch;
+    leave launch after 8s;
 
-    //enter ascent after 8s
-    //leave ascent after 181s
+    //enter ascent after 8s;
+    //leave ascent after 181s;
 
-    //enter meco after 141s
-    //leave meco after 181s
+    //enter meco after 141s;
+    //leave meco after 181s;
 
-    //enter microgravity after 181s
-    //leave microgravity after 346s
+    //enter microgravity after 181s;
+    //leave microgravity after 346s;
 
-    //enter descent after 346s
-    //leave descent after 450s
+    //enter descent after 346s;
+    //leave descent after 450s;
 
-    //enter postflight after 450s
-    //leave postflight after 500s
+    //enter postflight after 450s;
+    //leave postflight after 500s;
 
-    leave start
+    leave start;
   }
 
-  if (State launch | CC > 0kPa) {
+  if (State launch) {
     // Open the vent valve on launch
     set pin 14 pos;
     set pin 15 neg;
     set pin 14 neg after 350ms;
 
     leave launch;
+    enter transition after 8s;
     enter ascent after 8s;
+    leave ascent after 141s;
     enter meco after 141s;
   }
 
   // From Mark Hartigan's full-flow.e
-  // Don't think we do anything in ascent, right?
   // Loiter state with pressure sensor condition
-  if (State ascent | CC < 0.5kPa) {
+  // t = 8 seconds
+  if (State ascent | State transition) {
     // Close the vent valve
     // set pin 15 pos;
     // set pin 14 neg;
@@ -137,23 +143,37 @@ Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
 
     //enter test after 30s;  // end test after a half minute
 
-    leave ascent;
+    leave transition;
+    leave ascent after 165s;
   }
 
+  if (State ascent | CC < 0.5kPa) {
+    // Close the vent valve
+    // set pin 15 pos;
+    // set pin 14 neg;
+    // set pin 15 neg after 350ms;
 
-  // Conditional?
-  // Don't think we do anything in meco either right?
+    //enter test after 30s;  // end test after a half minute
+  }
+
   // Action state: Open and close valves at meco, leave meco immediately
-  // t ~ 141s, so enter microgravity at microgravity_time-141
+  // t = 141s, so enter microgravity at microgravity_time-141
   if (State meco) {
 
-    enter microgravity after 40s
+    // Open flow(?) valve after 60 seconds
+    set pin 12 pos;
+    set pin 21 neg;
+    set pin 12 neg after 40s;
+
+    enter transition after 40s;
+    enter microgravity after 40s;
     leave meco;
   }
 
 
-  // Conditional?
-  if (State microgravity) {
+  // t = 181s
+  // Define loiter state
+  if (State microgravity | State transition) {
     // This will evaluate 165 times
     // Close the vent valve
     set pin 15 pos;
@@ -169,16 +189,24 @@ Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
     set pin 20 neg;
     set pin 21 neg after 350ms;
 
-    leave microgravity;
-    // Should this evaluate as 346s from t=0, or as 165s from microgravity/meco?
-    enter descent after 346s;
+    leave transition;
+    leave microgravity after 165s;
+
+    enter transition after 165s;
+    // enter microgravity_end after 165s;
+    enter descent after 165s;
   }
 
+  // Start of descent is similar to State descent, but can move closing of pins
+  // to this conditional
+  // if (State microgravity_end) {
 
-  // Conditional?
-  if (State descent) {
+  //  leave microgravity_end
+  // }
+
+  // t=346s
+  if (State descent | State transition) {
     // Close flow/run valves at end of microgravity (=start of descent)
-    // For operating solenoids, is it the same syntax for both open and close?
     set pin 16 pos;
     set pin 12 neg;
     set pin 16 neg after 350ms;
@@ -187,19 +215,23 @@ Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
     set pin 20 neg;
     set pin 21 neg after 350ms;
 
-    leave descent;
-    enter postflight after 450s;
+    leave transition;
+    leave descent after 346s;
+
+    enter transition after 104s;
+    enter postflight after 104s;
   }
 
-
-  // Conditional?
   // Don't think we do anything in postflight right?
-  if (State postflight) {
+  // t=450s
+  if (State postflight | State transition) {
 
-    leave postflight;
-    enter cleanup after 500s;
+    leave transition;
+    leave postflight after 450s;
+    enter cleanup after 50s;
   }
 
+  // t=500s
   if (State cleanup | CC > 0kPa) {
     // Close all solenoids
     set pin 15 pos;
@@ -218,8 +250,6 @@ Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
   }
 }
 
-
-
 // Thermistor sensor
 Sensor ad15_gnd 1Hz {
   //TODO: determine the usual thermistor order (HFE, Propellant1, propellant2 etc.)
@@ -227,5 +257,21 @@ Sensor ad15_gnd 1Hz {
   where A1 is thermistor2 // for ..
   where A2 is thermistor3 // for ..
   where A3 is thermistor4 // for ..
+
+  // From adc_therm-test.e under experiments
+  [conversions | A0, raw, V, C    |                              ];
+  [conversions | A1, raw, V, C    |                              ];
+  [conversions | A2, raw, V, C    |                              ];
+  [conversions | A3, raw, V, C    |                              ];
+
+  [calibrate   | A0, poly, raw, V | 0.00041234314, -0.00198277794];
+  [calibrate   | A1, poly, raw, V | 0.00041234314, -0.00198277794];
+  [calibrate   | A2, poly, raw, V | 0.00041234314, -0.00198277794];
+  [calibrate   | A3, poly, raw, V | 0.00041234314, -0.00198277794];
+
+  [calibrate   | A0, poly, V, C   | -0.0000003, -0.000004, 0.0023, -0.1077, 1.9093];
+  [calibrate   | A1, poly, V, C   | -0.0000003, -0.000004, 0.0023, -0.1077, 1.9093];
+  [calibrate   | A2, poly, V, C   | -0.0000003, -0.000004, 0.0023, -0.1077, 1.9093];
+  [calibrate   | A3, poly, V, C   | -0.0000003, -0.000004, 0.0023, -0.1077, 1.9093];
 
 }
