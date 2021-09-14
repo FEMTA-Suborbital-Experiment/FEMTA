@@ -7,15 +7,25 @@
 **     4 pressure sensors, and the collection chamber.
 */
 
-define enter start
-define leave launch
+
+// Define loiter states to idle and transition between states, only dependent on
+// conditionals including sensor values and the current state
+define leave preflight
 define leave ascent
-define leave meco
 define leave microgravity
 define leave descent
 define leave postflight
-//define leave completed
+
+// Define action states to enter and immediately leave the state when a
+// conditional is met. Only dependent on state only
+define enter start
+define leave microgravity_end
+define leave launch
 define leave cleanup
+
+// Notes and questions for state pairs
+// Define state transitions at the end of action states?
+//
 
 
 // Following sensors from flight.e, on Evan's branch
@@ -44,10 +54,12 @@ Sensor mcp9 100Hz {  // Temperature
 
 
 Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
-  where A0 is HFE
+  where A0 is HFE1
   where A1 is prop
   where A2 is CC
-  where A3 is A3        // What is A3 supposed to be?
+  where A3 is HFE2
+  // A3 and A0 varies depending on where pressure sensors connected, verify with
+  // PCBv3 connections
 
   [calibrate   | HFE, poly, raw, V | 0.00041234314, -0.00198277794];
   [conversions | HFE, raw, V, kPa  |                              ];
@@ -70,15 +82,15 @@ Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
     -0.389869854380195
    ];
 
-   [print       | blue, HFE         | 3                            ];
+   [print       | blue, HFE1         | 3                            ];
    [print       | red, prop          | 3                            ];
-   [print       | maroon, CC       | 3                            ];
-   [print       | pink, A3         | 3                            ];
+   [print       | green, CC       | 3                            ];
+   [print       | yellow,HFE2         | 3                            ];
 
   if (State start | CC > 0kPa) {
-  // Enter phases of launch, I added 
-    //enter launch
-    //leave launch after 8s
+  // Enter phases of launch, I added
+    enter launch
+    leave launch after 8s
 
     //enter ascent after 8s
     //leave ascent after 181s
@@ -96,7 +108,6 @@ Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
     //leave postflight after 500s
 
     leave start
-    enter cleanup after 505s
   }
 
   if (State launch | CC > 0kPa) {
@@ -112,7 +123,8 @@ Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
 
   // From Mark Hartigan's full-flow.e
   // Don't think we do anything in ascent, right?
-  if (State ascent | collection < 0.5kPa) {
+  // Loiter state with pressure sensor condition
+  if (State ascent | CC < 0.5kPa) {
     // Close the vent valve
     // set pin 15 pos;
     // set pin 14 neg;
@@ -126,16 +138,17 @@ Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
     //enter test after 30s;  // end test after a half minute
 
     leave ascent;
-    enter microgravity after 181s;
   }
 
 
   // Conditional?
   // Don't think we do anything in meco either right?
+  // Action state: Open and close valves at meco, leave meco immediately
+  // t ~ 141s, so enter microgravity at microgravity_time-141
   if (State meco) {
-    
+
+    enter microgravity after 40s
     leave meco;
-    enter microgravity after 181s;
   }
 
 
@@ -158,7 +171,7 @@ Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
 
     leave microgravity;
     // Should this evaluate as 346s from t=0, or as 165s from microgravity/meco?
-    enter descent after 346s;       
+    enter descent after 346s;
   }
 
 
@@ -173,7 +186,7 @@ Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
     set pin 21 pos;
     set pin 20 neg;
     set pin 21 neg after 350ms;
-    
+
     leave descent;
     enter postflight after 450s;
   }
@@ -203,4 +216,16 @@ Sensor ad15_vdd 1Hz {   // Why is this at 1Hz? How did Jake decide that?
 
     leave cleanup;
   }
+}
+
+
+
+// Thermistor sensor
+Sensor ad15_gnd 1Hz {
+  //TODO: determine the usual thermistor order (HFE, Propellant1, propellant2 etc.)
+  where A0 is thermistor1 // for ..
+  where A1 is thermistor2 // for ..
+  where A2 is thermistor3 // for ..
+  where A3 is thermistor4 // for ..
+
 }
