@@ -22,6 +22,8 @@ define leave postflight
 // LargeSol1 -> Open:12  Close:16
 // LargeSol2 -> Open:20  Close:21
 // SmallSol1 -> Open:14  Close:15
+// SmallSol2 -> Open:18  Close:23
+// SmallSol3 -> Open:24  Close:25
 // See flight.e doc for solenoid movements
 // Open  solenoid: Open pin +  ->  Close pin -  ->  Open pin + after delay
 // Close solenoid: Close pin +  ->  Open pin -  ->  Close pin - after delay
@@ -53,10 +55,10 @@ Sensor mcp9 100Hz {  // Temperature
 
 
 Sensor ad15_vdd 10Hz {   // Why is this at 1Hz? How did Jake decide that?
-  where A0 is HFE1;
-  where A1 is prop;
-  where A2 is CC;
-  where A3 is HFE2;
+  where A0 is propL; //
+  where A1 is propR; //
+  where A2 is HFE; //
+  where A3 is CC; //
   // A3 and A0 varies depending on where pressure sensors connected, verify with
   // PCBv3 connections
 
@@ -127,7 +129,7 @@ Sensor ad15_vdd 10Hz {   // Why is this at 1Hz? How did Jake decide that?
   // Action state: Open big sol valves at meco, close small solenoid
   // t = 141s + 20min
   if (State meco) {
-    
+
     // Close the vent valve
     set pin 15 pos;
     set pin 14 neg;
@@ -191,20 +193,44 @@ Sensor ad15_gnd 1Hz {
   where A2 is thermistor3 // for ..
   where A3 is thermistor4 // for ..
 
-  // From adc_therm-test.e under experiments
-  [conversions | A0, raw, V, C    |                              ];
-  [conversions | A1, raw, V, C    |                              ];
-  [conversions | A2, raw, V, C    |                              ];
-  [conversions | A3, raw, V, C    |                              ];
+  // From thermistor.e under experiments in Evan branch
+    [calibrate   | thermistor1, poly, raw, V | 1, 0 ];  //placeholder calibration curve, get from electronics, simbox electronics, or simbox software
+    [calibrate   | thermistor1, poly, V, C   | -0.0000003,
+                                               -0.000004,
+                                                0.0023,
+                                               -0.1077,
+                                                1.9093
+    ];
 
-  [calibrate   | A0, poly, raw, V | 0.00041234314, -0.00198277794];
-  [calibrate   | A1, poly, raw, V | 0.00041234314, -0.00198277794];
-  [calibrate   | A2, poly, raw, V | 0.00041234314, -0.00198277794];
-  [calibrate   | A3, poly, raw, V | 0.00041234314, -0.00198277794];
+    [calibrate   | thermistor2, poly, raw, V | 1, 0 ];
+    [calibrate   | thermistor2, poly, V, C   | -0.00002,
+                                                0.0023,
+                                               -0.106,
+                                                2.003
+    ];
 
-  [calibrate   | A0, poly, V, C   | -0.0000003, -0.000004, 0.0023, -0.1077, 1.9093];
-  [calibrate   | A1, poly, V, C   | -0.0000003, -0.000004, 0.0023, -0.1077, 1.9093];
-  [calibrate   | A2, poly, V, C   | -0.0000003, -0.000004, 0.0023, -0.1077, 1.9093];
-  [calibrate   | A3, poly, V, C   | -0.0000003, -0.000004, 0.0023, -0.1077, 1.9093];
+    [calibrate   | thermistor3, poly, raw, V | 1, 0 ];
+    [calibrate   | thermistor3, poly, V, C   | -0.00002,
+                                                0.0024,
+                                               -0.1074,
+                                                1.9844
+    ];
 
+    [calibrate   | thermistor4, poly, raw, V | 1, 0 ];
+    [calibrate   | thermistor4, poly, V, C   | -0.00002,
+                                                0.0025,
+                                               -0.1009,
+                                                1.828
+    ];
+
+    [conversions | thermistor1, raw, V, C    |  ];
+    [conversions | thermistor2, raw, V, C    |  ];
+    [conversions | thermistor3, raw, V, C    |  ];
+    [conversions | thermistor4, raw, V, C    |  ];
+
+    // options are Flow, Temperature, or Bubble
+    [print | white, thermistor1 | 1 ];
+    [print | white, thermistor2 | 1 ];
+    [print | white, thermistor3 | 1 ];
+    [print | white, thermistor4 | 1 ];
 }
