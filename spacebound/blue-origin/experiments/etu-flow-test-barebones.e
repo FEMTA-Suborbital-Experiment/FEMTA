@@ -54,38 +54,48 @@ Sensor mcp9 100Hz {  // Temperature
 }
 
 
-Sensor ad15_vdd 10Hz {   // Why is this at 1Hz? How did Jake decide that?
-  where A0 is propL; //
-  where A1 is propR; //
-  where A2 is HFE; //
-  where A3 is CC; //
+Sensor ad15_vdd 10Hz {
+
+  // Facing the collection chamber assembly from the propellant tank assembly..
+  where A0 is propL; // Pressure sensor for the left propellant tank
+  where A1 is propR; // Ditto for right propellant tank
+  where A2 is HFE; // Ditto for HFE
+  where A3 is CC; // Ditto for Collection Chamber
   // A3 and A0 varies depending on where pressure sensors connected, verify with
   // PCBv3 connections
 
-  [calibrate   | HFE1, poly, raw, V | 0.00041234314, -0.00198277794];
-  [conversions | HFE1, raw, V, kPa  |                              ];
-  [calibrate   | HFE2, poly, raw, V | 0.00041234314, -0.00198277794];
-  [conversions | HFE2, raw, V, kPa  |                              ];
+  // Calibrations for ADC channels: A0, A1, A2, A3
+  // 9/22/21: Arbitrary calibration curves
+  [calibrate   | A0, poly, raw, V | 0.00041234314, -0.00198277794];
+  [conversions | A0, raw, V, kPa  |                              ];
+  [calibrate   | A1, poly, raw, V | 0.00041234314, -0.00198277794];
+  [conversions | A1, raw, V, kPa  |                              ];
+  [calibrate   | A2, poly, raw, V | 0.00041234314, -0.00198277794];
+  [conversions | A2, raw, V, kPa  |                              ];
+  [calibrate   | A3, poly, raw, V | 0.00041234314, -0.00198277794];
+  [conversions | A3, raw, V, kPa  |                              ];
 
-  [calibrate | prop, poly, V, kPa |
-    -0.00000805518095144006,
-     0.000179617025688186,
-    -0.00149263466053365,
-     0.0137083951784765,
-     3.84928878749102,
-    -0.389869854380195
-   ];
 
-  [calibrate | CC, poly, V, kPa |
-    -0.00000805518095144006,
-     0.000179617025688186,
-    -0.00149263466053365,
-     0.0137083951784765,
-     3.84928878749102,
-    -0.389869854380195
-   ];
+  // Linear Calibration Curves for propellant tanks
 
-   [print       | blue, HFE1         | 3                            ];
+  // 9/22/2021 Calibration curves from
+  // Calibrations/Pressure Sensors/Pressure Sensor Recalibration
+  // DMP331 10581670
+  [calibrate | propL, poly, V, kPa | 3.95, -0.0147];
+
+  // Ditto for propR
+  // DMP331 10581671
+  [calibrate | propR, poly, V, kPa | 3.95, -1.32];
+
+   // Ditto for HFE
+   // DMP331 10581672
+  [calibrate | HFE, poly, V, kPa | 3.95, 0.041];
+
+    // Ditto for CC
+    // DMP331 10581673
+  [calibrate | CC, poly, V, kPa | 3.96, -0.0319];
+
+   [print       | blue, propL         | 3                            ];
    [print       | green, CC       | 3                            ];
 
 
@@ -194,7 +204,22 @@ Sensor ad15_gnd 1Hz {
   where A3 is thermistor4 // for ..
 
   // From thermistor.e under experiments in Evan branch
-    [calibrate   | thermistor1, poly, raw, V | 1, 0 ];  //placeholder calibration curve, get from electronics, simbox electronics, or simbox software
+  // ADC Channel calibrations
+  // 9/22/2021: Arbitrary calibration values
+    [calibrate   | A0, poly, raw, V | 1, 0 ];  //placeholder calibration curve, get from electronics, simbox electronics, or simbox software
+    [calibrate   | A1, poly, raw, V | 1, 0 ];
+    [calibrate   | A2, poly, raw, V | 1, 0 ];
+    [calibrate   | A3, poly, raw, V | 1, 0 ];
+
+
+  // Thermistor calibrations taken from "Calibration Attempt 1 - Thermistors",
+  // which is under Calibrations/Thermistors
+  // From Eric Mesina's excel sheet, the coefficients correspond to the
+  // coefficients of the polynomial slope under "Relevant Values and Graphs"
+  // Should we use the coefficients from "Relevant Values and Graphs" or the
+  // coefficients from "Linear Curve Approxs"?
+  // Also, the calibration assumes voltage in the x-axis and temperature in the
+  // y, but in the excel sheet, these two variables are switched.
     [calibrate   | thermistor1, poly, V, C   | -0.0000003,
                                                -0.000004,
                                                 0.0023,
@@ -202,21 +227,19 @@ Sensor ad15_gnd 1Hz {
                                                 1.9093
     ];
 
-    [calibrate   | thermistor2, poly, raw, V | 1, 0 ];
     [calibrate   | thermistor2, poly, V, C   | -0.00002,
                                                 0.0023,
                                                -0.106,
                                                 2.003
     ];
 
-    [calibrate   | thermistor3, poly, raw, V | 1, 0 ];
+
     [calibrate   | thermistor3, poly, V, C   | -0.00002,
                                                 0.0024,
                                                -0.1074,
                                                 1.9844
     ];
 
-    [calibrate   | thermistor4, poly, raw, V | 1, 0 ];
     [calibrate   | thermistor4, poly, V, C   | -0.00002,
                                                 0.0025,
                                                -0.1009,
