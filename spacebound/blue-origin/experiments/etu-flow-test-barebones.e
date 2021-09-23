@@ -17,10 +17,16 @@ define leave microgravity
 define leave descent
 define leave postflight
 
+// Reference Note:
+/*
+  Our reference coordinates are based on looking at the collection chamber From
+  the propellant tank assembly
+*/
+
 
 //Notes/Tips:
-// LargeSol1 -> Open:12  Close:16
-// LargeSol2 -> Open:20  Close:21
+// LargeSol1 -> Open:12  Close:16 Left Solenoid
+// LargeSol2 -> Open:20  Close:21 Right Solenoid
 // SmallSol1 -> Open:14  Close:15
 // SmallSol2 -> Open:18  Close:23
 // SmallSol3 -> Open:24  Close:25
@@ -59,8 +65,8 @@ Sensor ad15_vdd 10Hz {
   // Facing the collection chamber assembly from the propellant tank assembly..
   where A0 is propL; // Pressure sensor for the left propellant tank
   where A1 is propR; // Ditto for right propellant tank
-  where A2 is HFE; // Ditto for HFE
-  where A3 is CC; // Ditto for Collection Chamber
+  where A2 is CC; // Ditto for HFE
+  where A3 is HFE; // Ditto for Collection Chamber
 
   // From PCBv3 ADC Calibration under Electronics/Calibrations
   // Calibrations for ADC channels: A0, A1, A2, A3
@@ -75,22 +81,26 @@ Sensor ad15_vdd 10Hz {
   // 9/22/2021 Calibration curves from
   // Calibrations/Pressure Sensors/Pressure Sensor Recalibration
   // DMP331 10581670
+  // A0
   [calibrate | propL, poly, V, kPa | 3.95262768374858,
                                     -0.00495191532074864
   ];
 
   // DMP331 10581671
+  // A1
   [calibrate | propR, poly, V, kPa | 3.81286958915643,
                                     -0.407801786384153
   ];
 
    // DMP331 10581672
-  [calibrate | HFE, poly, V, kPa | 3.95329270346274,
+   // A2
+  [calibrate | CC, poly, V, kPa | 3.95329270346274,
                                    0.0136826418999529
   ];
 
     // DMP331 10581673
-  [calibrate | CC, poly, V, kPa | 3.95490842365292,
+    // A3
+  [calibrate | HFE, poly, V, kPa | 3.95490842365292,
                                   -0.0105973861042243
   ];
 
