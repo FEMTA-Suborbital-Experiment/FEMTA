@@ -41,17 +41,17 @@ Sensor ds32 1Hz {  // Real Time Clock
     [conversions | Time, raw, s       |                  ];
 }
 
-/*
+
 Sensor slf3_left 100Hz {  // Flow
-    [calibrate   | Flow, poly, raw, ml/min | 1.0, 0.0];
-    [conversions | Flow, raw, ml/min       |         ];
+    [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
+    [conversions | Flow, raw, mlpmin       |         ];
 }
 
 Sensor slf3_right 100Hz {  // Flow
-    [calibrate   | Flow, poly, raw, ml/min | 1.0, 0.0];
-    [conversions | Flow, raw, ml/min       |         ];
+    [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
+    [conversions | Flow, raw, mLpmin       |         ];
 }
-*/
+
 Sensor hscm 100Hz {  // (Atmospheric) Pressure
 
 }
@@ -114,7 +114,7 @@ Sensor ad15_vdd 10Hz {
    [print       | green, CC       | 3                            ];
 
 
-  if (State preflight| CC > 0kPa) {
+  if (State preflight | CC > 0kPa) {
     // Close all solenoids at start
     set pin 16 pos;
     set pin 12 neg;
