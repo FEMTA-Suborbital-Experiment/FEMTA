@@ -212,38 +212,28 @@ Sensor ad15_gnd 1Hz {
     [calibrate   | A3, poly, raw, V | 1, 0 ];
 
 
-  // Thermistor calibrations taken from "Calibration Attempt 1 - Thermistors",
+  // Thermistor calibrations taken from "Voltage to Temperature Calibrations",
   // which is under Calibrations/Thermistors
-  // From Eric Mesina's excel sheet, the coefficients correspond to the
-  // coefficients of the polynomial slope under "Relevant Values and Graphs"
-  // Should we use the coefficients from "Relevant Values and Graphs" or the
-  // coefficients from "Linear Curve Approxs"?
-  // Also, the calibration assumes voltage in the x-axis and temperature in the
-  // y, but in the excel sheet, these two variables are switched.
-    [calibrate   | thermistor1, poly, V, C   | -0.0000003,
-                                               -0.000004,
-                                                0.0023,
-                                               -0.1077,
-                                                1.9093
+  // TODO: Find a more accurate first term for quadratic calibration curves
+    [calibrate   | thermistor1, poly, V, C   | 30000000,
+                                               -87623,
+                                                67.037,
     ];
 
-    [calibrate   | thermistor2, poly, V, C   | -0.00002,
-                                                0.0023,
-                                               -0.106,
-                                                2.003
+    [calibrate   | thermistor2, poly, V, C   | 30000000,
+                                               -84025,
+                                               65.793,
     ];
 
 
-    [calibrate   | thermistor3, poly, V, C   | -0.00002,
-                                                0.0024,
-                                               -0.1074,
-                                                1.9844
+    [calibrate   | thermistor3, poly, V, C   | 30000000,
+                                               -89248,
+                                               65.793,
     ];
 
-    [calibrate   | thermistor4, poly, V, C   | -0.00002,
-                                                0.0025,
-                                               -0.1009,
-                                                1.828
+    [calibrate   | thermistor4, poly, V, C   | 30000000,
+                                               -88687,
+                                               67.23,
     ];
 
     [conversions | thermistor1, raw, V, C    |  ];
