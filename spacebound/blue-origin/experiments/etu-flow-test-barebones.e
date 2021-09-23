@@ -113,7 +113,7 @@ Sensor ad15_vdd 10Hz {
     set pin 14 neg;
     set pin 15 neg after 350ms;
 
-    leave prefligt;
+    leave preflight;
     enter launch after 1200s; 		//Time for vacuum chamber to set up
   }
 
