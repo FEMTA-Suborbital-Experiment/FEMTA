@@ -61,19 +61,13 @@ Sensor ad15_vdd 10Hz {
   where A1 is propR; // Ditto for right propellant tank
   where A2 is HFE; // Ditto for HFE
   where A3 is CC; // Ditto for Collection Chamber
-  // A3 and A0 varies depending on where pressure sensors connected, verify with
-  // PCBv3 connections
 
+  // From PCBv3 ADC Calibration under Electronics/Calibrations
   // Calibrations for ADC channels: A0, A1, A2, A3
-  // 9/22/21: Arbitrary calibration curves
-  [calibrate   | A0, poly, raw, V | 0.00041234314, -0.00198277794];
-  [conversions | A0, raw, V, kPa  |                              ];
-  [calibrate   | A1, poly, raw, V | 0.00041234314, -0.00198277794];
-  [conversions | A1, raw, V, kPa  |                              ];
-  [calibrate   | A2, poly, raw, V | 0.00041234314, -0.00198277794];
-  [conversions | A2, raw, V, kPa  |                              ];
-  [calibrate   | A3, poly, raw, V | 0.00041234314, -0.00198277794];
-  [conversions | A3, raw, V, kPa  |                              ];
+  [calibrate   | A0, poly, raw, V | 0.000611194783814244, -0.00037848925398618];
+  [calibrate   | A1, poly, raw, V | 0.000611542543756964, -0.0000712736101910855];
+  [calibrate   | A2, poly, raw, V | 0.000611534471337498, -0.0000775563062361835];
+  [calibrate   | A3, poly, raw, V | 0.000589814729559766, -0.154609889070793];
 
 
   // Linear Calibration Curves for propellant tanks
@@ -81,19 +75,29 @@ Sensor ad15_vdd 10Hz {
   // 9/22/2021 Calibration curves from
   // Calibrations/Pressure Sensors/Pressure Sensor Recalibration
   // DMP331 10581670
-  [calibrate | propL, poly, V, kPa | 3.95, -0.0147];
+  [calibrate | propL, poly, V, kPa | 3.95262768374858,
+                                    -0.00495191532074864
+  ];
 
-  // Ditto for propR
   // DMP331 10581671
-  [calibrate | propR, poly, V, kPa | 3.95, -1.32];
+  [calibrate | propR, poly, V, kPa | 3.81286958915643,
+                                    -0.407801786384153
+  ];
 
-   // Ditto for HFE
    // DMP331 10581672
-  [calibrate | HFE, poly, V, kPa | 3.95, 0.041];
+  [calibrate | HFE, poly, V, kPa | 3.95329270346274,
+                                   0.0136826418999529
+  ];
 
-    // Ditto for CC
     // DMP331 10581673
-  [calibrate | CC, poly, V, kPa | 3.96, -0.0319];
+  [calibrate | CC, poly, V, kPa | 3.95490842365292,
+                                  -0.0105973861042243
+  ];
+
+  [conversions | A0, raw, V, kPa  |                              ];
+  [conversions | A1, raw, V, kPa  |                              ];
+  [conversions | A2, raw, V, kPa  |                              ];
+  [conversions | A3, raw, V, kPa  |                              ];
 
    [print       | blue, propL         | 3                            ];
    [print       | green, CC       | 3                            ];
@@ -203,37 +207,44 @@ Sensor ad15_gnd 1Hz {
   where A2 is thermistor3 // for ..
   where A3 is thermistor4 // for ..
 
-  // From thermistor.e under experiments in Evan branch
+  // From PCBv3 ADC Calibration under Electronics/Calibrations
   // ADC Channel calibrations
-  // 9/22/2021: Arbitrary calibration values
-    [calibrate   | A0, poly, raw, V | 1, 0 ];  //placeholder calibration curve, get from electronics, simbox electronics, or simbox software
-    [calibrate   | A1, poly, raw, V | 1, 0 ];
-    [calibrate   | A2, poly, raw, V | 1, 0 ];
-    [calibrate   | A3, poly, raw, V | 1, 0 ];
+    [calibrate   | A0, poly, raw, V | 0.000187760043219144,
+                                      0.0000186149452909308
+    ];
+    [calibrate   | A1, poly, raw, V | 0.000187759867294351,
+                                      0.0000207491490691839
+    ];
+    [calibrate   | A2, poly, raw, V | 0.000187761014729653,
+                                      0.0000193254277389214
+    ];
+    [calibrate   | A3, poly, raw, V | 0.000187750489295807,
+                                      0.000013227022497931
+    ];
 
 
   // Thermistor calibrations taken from "Voltage to Temperature Calibrations",
   // which is under Calibrations/Thermistors
   // TODO: Find a more accurate first term for quadratic calibration curves
-    [calibrate   | thermistor1, poly, V, C   | 30000000,
-                                               -87623,
-                                                67.037,
+    [calibrate   | thermistor1, poly, V, C   | 28893702.7627466,
+                                               -87623.1450618716,
+                                                67.0367407808325,
     ];
 
-    [calibrate   | thermistor2, poly, V, C   | 30000000,
-                                               -84025,
-                                               65.793,
+    [calibrate   | thermistor2, poly, V, C   | 26939605.0709972,
+                                               -84025.306425667,
+                                               65.792989370689,
     ];
 
 
-    [calibrate   | thermistor3, poly, V, C   | 30000000,
-                                               -89248,
-                                               65.793,
+    [calibrate   | thermistor3, poly, V, C   | 29992593.4712639,
+                                               -89247.9017336437,
+                                               67.2483882781364,
     ];
 
-    [calibrate   | thermistor4, poly, V, C   | 30000000,
-                                               -88687,
-                                               67.23,
+    [calibrate   | thermistor4, poly, V, C   | 29664639.0926322,
+                                               -88686.8609090078,
+                                               67.2298598866639,
     ];
 
     [conversions | thermistor1, raw, V, C    |  ];
