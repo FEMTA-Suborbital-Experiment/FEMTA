@@ -44,7 +44,7 @@ Sensor ds32 1Hz {  // Real Time Clock
 
 Sensor slf3_left 100Hz {  // Flow
     [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
-    [conversions | Flow, raw, mlpmin       |         ];
+    [conversions | Flow, raw, mLpmin       |         ];
 }
 
 Sensor slf3_right 100Hz {  // Flow
@@ -83,25 +83,25 @@ Sensor ad15_vdd 10Hz {
   // Calibrations/Pressure Sensors/Pressure Sensor Recalibration
   // DMP331 10581670
   // A0
-  [calibrate | propL, poly, V, Pa | 3.95262768374858,
+  [calibrate | propL, poly, V, kPa | 3.95262768374858,
                                     -0.00495191532074864
   ];
 
   // DMP331 10581671
   // A1
-  [calibrate | propR, poly, V, Pa | 3.81286958915643,
+  [calibrate | propR, poly, V, kPa | 3.81286958915643,
                                     -0.407801786384153
   ];
 
    // DMP331 10581672
    // A2
-  [calibrate | CC, poly, V, Pa | 3.95329270346274,
+  [calibrate | CC, poly, V, kPa | 3.95329270346274,
                                    0.0136826418999529
   ];
 
     // DMP331 10581673
     // A3
-  [calibrate | HFE, poly, V, Pa | 3.95490842365292,
+  [calibrate | HFE, poly, V, kPa | 3.95490842365292,
                                   -0.0105973861042243
   ];
 
