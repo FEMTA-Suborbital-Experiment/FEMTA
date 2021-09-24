@@ -99,7 +99,7 @@ Sensor ad15_vdd 10Hz {
                                    0.0136826418999529
   ];
 
-    // DMP331 10581673
+    // DMP331 1110585
     // A3
   [calibrate | HFE, poly, V, kPa | 3.95490842365292,
                                   -0.0105973861042243
@@ -213,11 +213,10 @@ Sensor ad15_vdd 10Hz {
 
 // Thermistor sensor
 Sensor ad15_gnd 1Hz {
-  //TODO: determine the usual thermistor order (HFE, Propellant1, propellant2 etc.)
-  where A0 is thermistor1 // for ..
-  where A1 is thermistor2 // for ..
-  where A2 is thermistor3 // for ..
-  where A3 is thermistor4 // for ..
+  where A0 is thermistor1 // for Left Propellant Tank
+  where A1 is thermistor2 // for Right Propellant Tank
+  where A2 is thermistor3 // for HFE Thermistor 1 (Back)
+  where A3 is thermistor4 // for HFE Thermistor 2 (Top)
 
   // From PCBv3 ADC Calibration under Electronics/Calibrations
   // ADC Channel calibrations
