@@ -4,7 +4,7 @@
 **        date: September 10, 2021
 ** description:
 **     Flow test involving propellant sending units, solenoids,
-**     4 pressure sensors, and the collection chamber.
+**     4 pressure sensors, 4 thermistors, and the collection chamber.
 */
 
 
@@ -19,8 +19,8 @@ define leave postflight
 
 // Reference Note:
 /*
-  Our reference coordinates are based on looking at the collection chamber From
-  the propellant tank assembly
+  Our reference frame is based on facing the collection chamber from
+  the propellant tank assembly.
 */
 
 
@@ -63,7 +63,7 @@ Sensor mcp9 100Hz {  // Temperature
 
 Sensor ad15_vdd 10Hz {
 
-  // Facing the collection chamber assembly from the propellant tank assembly..
+  // See reference notes
   where A0 is propL; // Pressure sensor for the left propellant tank
   where A1 is propR; // Ditto for right propellant tank
   where A2 is CC; // Ditto for HFE
@@ -110,8 +110,9 @@ Sensor ad15_vdd 10Hz {
   [conversions | A2, raw, V, kPa  |                              ];
   [conversions | A3, raw, V, kPa  |                              ];
 
-   [print       | blue, propL         | 3                            ];
-   [print       | green, CC       | 3                            ];
+   [print       | red, HFE         | 3                            ];
+   [print       | green, propL       | 3                            ];
+   [print       | blue, CC         | 3                            ];
 
 
   if (State preflight | CC > 0kPa) {
@@ -236,7 +237,6 @@ Sensor ad15_gnd 1Hz {
 
   // Thermistor calibrations taken from "Voltage to Temperature Calibrations",
   // which is under Calibrations/Thermistors
-  // TODO: Find a more accurate first term for quadratic calibration curves
     [calibrate   | thermistor1, poly, V, C   | 28893702.7627466,
                                                -87623.1450618716,
                                                 67.0367407808325,
