@@ -36,7 +36,7 @@ define leave postflight
 
 
 // Following sensors from flight.e, on Evan's branch
-Sensor ds32 1Hz {  // Real Time Clock
+Sensor ds32 10Hz {  // Real Time Clock
     [calibrate   | Time, poly, raw, s | 0.0009765625, 0.0];
     [conversions | Time, raw, s       |                  ];
 }
@@ -212,7 +212,7 @@ Sensor ad15_vdd 10Hz {
 
 
 // Thermistor sensor
-Sensor ad15_gnd 1Hz {
+Sensor ad15_gnd 10Hz {
   where A0 is thermistor1 // for Left Propellant Tank
   where A1 is thermistor2 // for Right Propellant Tank
   where A2 is thermistor3 // for HFE Thermistor 1 (Back)
