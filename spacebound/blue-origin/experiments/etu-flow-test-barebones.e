@@ -13,6 +13,7 @@
 define leave preflight
 define leave launch
 define leave ascent
+define leave meco
 define leave microgravity
 define leave descent
 define leave postflight
@@ -136,7 +137,7 @@ Sensor ad15_vdd 10Hz {
 
 
   // t = 0s + 20min
-  if (State launch) {
+  if (State launch | CC > 0kPa) {
     // Open the collection chamber (small solenoid) on launch
     set pin 14 pos;
     set pin 15 neg;
@@ -155,7 +156,7 @@ Sensor ad15_vdd 10Hz {
 
   // Action state: Open big sol valves at meco, close small solenoid
   // t = 141s + 20min
-  if (State meco) {
+  if (State meco | CC > 0kPa) {
 
     // Close the vent valve
     set pin 15 pos;
@@ -177,7 +178,7 @@ Sensor ad15_vdd 10Hz {
 
 
   // t = 181s + 20min
-  if (State microgravity) {
+  if (State microgravity | CC > 0kPa) {
 
     leave microgravity;
     enter descent after 165s;
@@ -185,7 +186,7 @@ Sensor ad15_vdd 10Hz {
 
 
   // t=346s + 20min
-  if (State descent) {
+  if (State descent | CC > 0kPa) {
     // Close all solenoids
     set pin 16 pos;
     set pin 12 neg;
@@ -205,7 +206,7 @@ Sensor ad15_vdd 10Hz {
 
 
   // t=450s + 20min
-  if (State postflight) {
+  if (State postflight | CC > 0kPa) {
 
     leave postflight;
   }
@@ -239,23 +240,23 @@ Sensor ad15_gnd 10Hz {
   // which is under Calibrations/Thermistors
     [calibrate   | thermistor1, poly, V, C   | 28893702.7627466,
                                                -87623.1450618716,
-                                                67.0367407808325,
+                                                67.0367407808325
     ];
 
     [calibrate   | thermistor2, poly, V, C   | 26939605.0709972,
                                                -84025.306425667,
-                                               65.792989370689,
+                                               65.792989370689
     ];
 
 
     [calibrate   | thermistor3, poly, V, C   | 29992593.4712639,
                                                -89247.9017336437,
-                                               67.2483882781364,
+                                               67.2483882781364
     ];
 
     [calibrate   | thermistor4, poly, V, C   | 29664639.0926322,
                                                -88686.8609090078,
-                                               67.2298598866639,
+                                               67.2298598866639
     ];
 
     [conversions | thermistor1, raw, V, C    |  ];
