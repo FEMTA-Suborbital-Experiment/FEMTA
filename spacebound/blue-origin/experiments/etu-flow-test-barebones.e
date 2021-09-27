@@ -41,7 +41,7 @@ Sensor ds32 10Hz {  // Real Time Clock
     [conversions | Time, raw, s       |                  ];
 }
 
-
+/*
 Sensor slf3_left 100Hz {  // Flow
     [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
     [conversions | Flow, raw, mLpmin       |         ];
@@ -51,6 +51,7 @@ Sensor slf3_right 100Hz {  // Flow
     [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
     [conversions | Flow, raw, mLpmin       |         ];
 }
+*/
 
 Sensor hscm 100Hz {  // (Atmospheric) Pressure
 
