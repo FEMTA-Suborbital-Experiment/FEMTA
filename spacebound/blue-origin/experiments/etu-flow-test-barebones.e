@@ -10,7 +10,7 @@
 
 // Define loiter states to idle and transition between states, only dependent on
 // conditionals including sensor values and the current state
-define leave preflight
+define enter preflight
 define leave launch
 define leave ascent
 define leave meco
@@ -42,6 +42,8 @@ Sensor ds32 10Hz {  // Real Time Clock
     [conversions | Time, raw, s       |                  ];
 }
 
+
+// TODO: Figure out issue with "syntax errors" with flow sensor definitions
 /*
 Sensor slf3_left 100Hz {  // Flow
     [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
@@ -54,6 +56,7 @@ Sensor slf3_right 100Hz {  // Flow
 }
 */
 
+/*
 Sensor hscm 100Hz {  // (Atmospheric) Pressure
 
 }
@@ -61,7 +64,7 @@ Sensor hscm 100Hz {  // (Atmospheric) Pressure
 Sensor mcp9 100Hz {  // Temperature
 
 }
-
+*/
 
 Sensor ad15_vdd 10Hz {
 
@@ -80,7 +83,6 @@ Sensor ad15_vdd 10Hz {
 
 
   // Linear Calibration Curves for propellant tanks
-
   // 9/22/2021 Calibration curves from
   // Calibrations/Pressure Sensors/Pressure Sensor Recalibration
   // DMP331 10581670
@@ -114,6 +116,7 @@ Sensor ad15_vdd 10Hz {
 
    [print       | red, HFE         | 3                            ];
    [print       | green, propL       | 3                            ];
+   [print       | white, propR         | 3                            ];
    [print       | blue, CC         | 3                            ];
 
 
@@ -127,27 +130,30 @@ Sensor ad15_vdd 10Hz {
     set pin 20 neg;
     set pin 21 neg after 350ms;
 
-    set pin 15 pos;
-    set pin 14 neg;
-    set pin 15 neg after 350ms;
+    // Open the vent valve
+    set pin 14 pos;
+    set pin 15 neg;
+    set pin 14 neg after 350ms;
 
     leave preflight;
-    enter launch after 1200s; 		//Time for vacuum chamber to set up
+    enter launch after 840; 		// Time for vacuum chamber to set up: 1200
   }
 
 
   // t = 0s + 20min
   if (State launch | CC > 0kPa) {
     // Open the collection chamber (small solenoid) on launch
-    set pin 14 pos;
-    set pin 15 neg;
-    set pin 14 neg after 350ms;
+    // Redundant: Vent valve opens in above preflight conditoinal
+    //set pin 14 pos;
+    //set pin 15 neg;
+    //set pin 14 neg after 350ms;
 
     leave launch;
     enter ascent after 8s;
   }
 
-  //t = 8s + 20min
+
+  // t = 8s + 20min
   if (State ascent | CC < 0.5kPa) {
     leave ascent;
     enter meco after 133s;
@@ -163,14 +169,14 @@ Sensor ad15_vdd 10Hz {
     set pin 14 neg;
     set pin 15 neg after 350ms;
 
-    // Open flow valve after small delay
-    set pin 12 pos;
+    // Open two flow valves at the same time after small delay
+    set pin 12 pos after 5s; // Allowing for vacuum
     set pin 16 neg;
-    set pin 12 neg after 5s;
+    set pin 12 neg after 10s;
 
-    set pin 20 pos;
+    set pin 20 pos after 5s;
     set pin 21 neg;
-    set pin 20 neg after 5s;
+    set pin 20 neg after 10s;
 
     leave meco;
     enter microgravity after 40s;
@@ -213,6 +219,10 @@ Sensor ad15_vdd 10Hz {
 }
 
 
+/*
+// TODO: Revisit thermistor calibrations after thermistor rewiring and
+// possible recalibration
+
 // Thermistor sensor
 Sensor ad15_gnd 10Hz {
   where A0 is thermistor1 // for Left Propellant Tank
@@ -239,9 +249,8 @@ Sensor ad15_gnd 10Hz {
   // Thermistor calibrations taken from "Voltage to Temperature Calibrations",
   // which is under Calibrations/Thermistors
     [calibrate   | thermistor1, poly, V, C   | 28893702.7627466,
-                                               -87623.1450618716,
-                                                67.0367407808325
-    ];
+                                             -87623.1450618716,
+                                              67.0367407808325
 
     [calibrate   | thermistor2, poly, V, C   | 26939605.0709972,
                                                -84025.306425667,
@@ -270,3 +279,4 @@ Sensor ad15_gnd 10Hz {
     [print | white, thermistor3 | 1 ];
     [print | white, thermistor4 | 1 ];
 }
+*/
