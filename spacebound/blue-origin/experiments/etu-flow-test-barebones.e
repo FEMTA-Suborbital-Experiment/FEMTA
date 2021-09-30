@@ -32,8 +32,8 @@ define leave postflight
 // SmallSol2 -> Open:18  Close:23
 // SmallSol3 -> Open:24  Close:25
 // See flight.e doc for solenoid movements
-// Open  solenoid: Open pin +  ->  Close pin -  ->  Open pin + after delay
-// Close solenoid: Close pin +  ->  Open pin -  ->  Close pin - after delay
+// Open  solenoid:  Open pin +  ->  Close pin -  ->  Open pin  - after delay
+// Close solenoid: Close pin +  ->  Open pin -   ->  Close pin - after delay
 
 
 // Following sensors from flight.e, on Evan's branch
@@ -136,7 +136,7 @@ Sensor ad15_vdd 10Hz {
     set pin 14 neg after 350ms;
 
     leave preflight;
-    enter launch after 840; 		// Time for vacuum chamber to set up: 1200
+    enter launch after 840s; 		// Time for vacuum chamber to set up: 1200
   }
 
 
@@ -225,10 +225,10 @@ Sensor ad15_vdd 10Hz {
 
 // Thermistor sensor
 Sensor ad15_gnd 10Hz {
-  where A0 is thermistor1 // for Left Propellant Tank
-  where A1 is thermistor2 // for Right Propellant Tank
-  where A2 is thermistor3 // for HFE Thermistor 1 (Back)
-  where A3 is thermistor4 // for HFE Thermistor 2 (Top)
+  where A0 is thermistor1; // for Left Propellant Tank
+  where A1 is thermistor2; // for Right Propellant Tank
+  where A2 is thermistor3; // for HFE Thermistor 1 (Back)
+  where A3 is thermistor4; // for HFE Thermistor 2 (Top)
 
   // From PCBv3 ADC Calibration under Electronics/Calibrations
   // ADC Channel calibrations
