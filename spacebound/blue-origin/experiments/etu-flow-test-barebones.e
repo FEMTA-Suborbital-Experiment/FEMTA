@@ -44,7 +44,6 @@ Sensor ds32 10Hz {  // Real Time Clock
 
 
 // TODO: Figure out issue with "syntax errors" with flow sensor definitions
-/*
 Sensor slf3_left 100Hz {  // Flow
     [calibrate   | Flowrate, poly, raw, mLpmin | 1.0, 0.0];
     [conversions | Flowrate, raw, mLpmin       |         ];
@@ -54,7 +53,7 @@ Sensor slf3_right 100Hz {  // Flow
     [calibrate   | Flowrate, poly, raw, mLpmin | 1.0, 0.0];
     [conversions | Flowrate, raw, mLpmin       |         ];
 }
-*/
+
 
 /*
 Sensor hscm 100Hz {  // (Atmospheric) Pressure
