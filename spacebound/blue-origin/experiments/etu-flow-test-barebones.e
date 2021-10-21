@@ -10,7 +10,7 @@
 
 // Define loiter states to idle and transition between states, only dependent on
 // conditionals including sensor values and the current state
-define enter preflight // MAKE SURE THIS IS ON "ENTER" STATE
+define enter preflight
 define leave launch
 define leave ascent
 define leave meco
@@ -44,16 +44,17 @@ Sensor ds32 10Hz {  // Real Time Clock
 
 
 // TODO: Figure out issue with "syntax errors" with flow sensor definitions
+/*
 Sensor slf3_left 100Hz {  // Flow
-    [calibrate   | Flowrate, poly, raw, mLpmin | 1.0, 0.0];
-    [conversions | Flowrate, raw, mLpmin       |         ];
+    [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
+    [conversions | Flow, raw, mLpmin       |         ];
 }
 
 Sensor slf3_right 100Hz {  // Flow
-    [calibrate   | Flowrate, poly, raw, mLpmin | 1.0, 0.0];
-    [conversions | Flowrate, raw, mLpmin       |         ];
+    [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
+    [conversions | Flow, raw, mLpmin       |         ];
 }
-
+*/
 
 /*
 Sensor hscm 100Hz {  // (Atmospheric) Pressure
