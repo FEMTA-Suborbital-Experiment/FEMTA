@@ -45,13 +45,40 @@ Sensor ds32 10Hz {  // Real Time Clock
 
 // TODO: Figure out issue with "syntax errors" with flow sensor definitions
 Sensor slf3_left 10Hz {  // Flow
+    // Calibrate and convert Flow from raw to mL/min
     [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
     [conversions | Flow, raw, mLpmin       |         ];
+
+    // slf3 contains an internal calibration, so just use the raw temperature
+    // from slf3
+    // see slf3.c in blue-origin/sensors
+    [calibrate   | Temperature, poly, raw, C | 1.0, 0.0];
+    [conversions | Temperature, raw, C       |         ];
+
+    // Similarly, detect if bubble in flow, like IR Flow sensor
+    // No further calibrations
+    [calibrate   | Bubble, poly, raw, V | 1.0, 0.0];
+    [conversions | Bubble, raw, V       |         ];
+
+    [print       | pink, Flow         | 3                         ];
+    [print       | pink, Temperature     | 3                            ];
+    [print       | pink, Bubble     | 3                            ];
 }
 
+// Comments for implementation above also concern "right" flow sensor
 Sensor slf3_right 100Hz {  // Flow
     [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
     [conversions | Flow, raw, mLpmin       |         ];
+
+    [calibrate   | Temperature, poly, raw, C | 1.0, 0.0];
+    [conversions | Temperature, raw, C       |         ];
+
+    [calibrate   | Bubble, poly, raw, V | 1.0, 0.0];
+    [conversions | Bubble, raw, V       |         ];
+
+    [print       | cyan, Flow         | 3                         ];
+    [print       | cyan, Temperature     | 3                            ];
+    [print       | cyan, Bubble     | 3                            ];
 }
 
 
