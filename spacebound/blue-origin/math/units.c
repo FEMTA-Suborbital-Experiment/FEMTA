@@ -131,10 +131,11 @@ void init_units() {
   hashmap_add(unit_types,    "A",     "Current");
   hashmap_add(unit_types,   "mA",     "Current");
   hashmap_add(unit_types,  "mol",    "Quantity");
-  
+  hashmap_add(unit_types, "mLpmin",      "Flow");
+
   
   all_units = list_from
-    (26, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min", "%", "B", "KB", "MB", "Ohm", "kOhm", "m", "ft", "kg", "lbs", "cd", "A", "mA", "mol");
+    (27, "raw", "C", "K", "F", "atm", "kPa", "torr", "V", "mV", "s", "ms", "min", "%", "B", "KB", "MB", "Ohm", "kOhm", "m", "ft", "kg", "lbs", "cd", "A", "mA", "mol", "mLpmin");
 }
 
 void drop_units() {
