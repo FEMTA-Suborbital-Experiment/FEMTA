@@ -1,0 +1,28 @@
+/*
+** HSC Test Fall 2021
+**      author(s): Jake Valdez
+**        date: October 28, 2021
+** description:
+**     Test HSCM sensor only to conveniently measure
+**     ambient temperature
+*/
+
+define enter start
+
+Sensor hscm 100Hz {  // (Atmospheric) Pressure
+
+    // HSCM sensor on FEMTA returns values in the range 0-15 psi. However,
+    // Exp only supports kPa, psi, and torr. Convert to kPa by using
+    // coefficients of polynomial
+    // 1 psi = 6.89475728 kPa
+    [calibrate   | Pressure, poly, raw, kPa | 6.89475728, 0.0];
+    [conversions | Pressure, raw, kPa       |         ];
+
+    // HSCM Sensor also includes a way to measure temperature
+    // There is Temperature Conversion in hscm.c; no need to convert.
+    [calibrate   | Temperature, poly, raw, mLpmin | 1.0, 0.0];
+    [conversions | Temperature, raw, mLpmin       |         ];
+
+    [print       | white, Pressure         | 3                         ];
+    [print       | green, Temperature         | 3                         ];
+}

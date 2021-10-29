@@ -1,0 +1,17 @@
+/*
+** MCP9 Test Fall 2021
+**      author(s): Jake Valdez
+**        date: October 28, 2021
+** description:
+**     Test HSCM sensor only to conveniently measure
+**     ambient pressure and ambient temperature
+*/
+
+define enter start
+
+Sensor mcp9 100Hz {  // Temperature
+    [calibrate   | Temperature, poly, raw, C | 1.0, 0.0];
+    [conversions | Temperature, raw, C       |         ];
+
+    [print       | white, Temperature         | 3                         ];
+}
