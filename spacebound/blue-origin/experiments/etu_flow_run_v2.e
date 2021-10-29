@@ -81,14 +81,31 @@ Sensor slf3_right 100Hz {  // Flow
     [print       | cyan, Bubble     | 3                            ];
 }
 
-
-/* HSCM Sensor not defined on I2C Sensors
+/* HSCM Sensor not defined on I2CBus
+// TODO: Verify working syntax and test these at some point
 Sensor hscm 100Hz {  // (Atmospheric) Pressure
 
+    // HSCM sensor on FEMTA returns values in the range 0-15 psi. However,
+    // Exp only supports kPa, psi, and torr. Convert to kPa by using
+    // coefficients of polynomial
+    // 1 psi = 6.89475728 kPa
+    [calibrate   | Pressure, poly, raw, kPa | 6.89475728, 0.0];
+    [conversions | Pressure, raw, kPa       |         ];
+
+    // HSCM Sensor also includes a way to measure temperature
+    // There is Temperature Conversion in hscm.c; no need to convert.
+    [calibrate   | Temperature, poly, raw, mLpmin | 1.0, 0.0];
+    [conversions | Temperature, raw, mLpmin       |         ];
+
+    [print       | mint, Pressure         | 3                         ];
+    [print       | mint, Temperature         | 3                         ];
 }
 
 Sensor mcp9 100Hz {  // Temperature
+    [calibrate   | Temperature, poly, raw, C | 1.0, 0.0];
+    [conversions | Temperature, raw, C       |         ];
 
+    [print       | blue, Temperature         | 3                         ];
 }
 */
 
