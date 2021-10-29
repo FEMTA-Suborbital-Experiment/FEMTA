@@ -43,7 +43,6 @@ Sensor ds32 10Hz {  // Real Time Clock
 }
 
 
-// TODO: Figure out issue with "syntax errors" with flow sensor definitions
 Sensor slf3_left 10Hz {  // Flow
     // Calibrate and convert Flow from raw to mL/min
     [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
