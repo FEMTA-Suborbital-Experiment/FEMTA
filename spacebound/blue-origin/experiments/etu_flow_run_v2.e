@@ -96,6 +96,13 @@ Sensor hscm 100Hz {  // (Atmospheric) Pressure
     [calibrate   | Temperature, poly, raw, mLpmin | 1.0, 0.0];
     [conversions | Temperature, raw, mLpmin       |         ];
 
+    // Optional Temperature conversion that uses Exp poly to do the conversion,
+    // rather existing conversion on hscm.c
+    // First coefficient: 200/2047
+    // Second coefficient: -50 offset
+    // [calibrate   | Temperature, poly, raw, mLpmin | 0.09770395701, -50.0];
+    // [conversions | Temperature, raw, mLpmin       |         ];
+
     [print       | mint, Pressure         | 3                         ];
     [print       | mint, Temperature         | 3                         ];
 }
