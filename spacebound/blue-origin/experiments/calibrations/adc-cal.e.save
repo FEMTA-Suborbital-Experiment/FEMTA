@@ -1,0 +1,15 @@
+define enter start;
+
+Sensor ad15_vdd 20Hz {
+  
+  where A1 is measure;
+  
+  [print | purple, measure | 4];
+  [print | red, A1         | 4];
+}  where A1 is measure;
+
+  [print | purple, measure | 4];
+  [print | red, A1         | 4];
+}
+
+

@@ -4,9 +4,16 @@
 Schedule * schedule;
 
 float time_passed() {
-  //return (schedule -> interrupts) * (schedule -> interrupt_interval);
-  //return (float) real_time_diff(&time_start_os) / 1E9;
-  return (float) (time(NULL) - time_start_os);
+  // Seconds since start of experiment (rounded down to nearest integer value)
+  return (float) (time(NULL) - time_start);
+}
+
+float real_time_passed() {
+  return 0.0; 
+}
+
+float os_time_passed() {
+  return real_time_diff_float(&time_start_os);
 }
 
 void build_schedule() {

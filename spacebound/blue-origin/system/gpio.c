@@ -7,7 +7,7 @@ void pin_set(char gpio, bool hot) {                     // set a pin high or low
   
   if (pins[gpio].hot == hot && pins[gpio].ever_used)    // don't actuate when unnecessary
     return;
-  
+
   gpioWrite(gpio, (int) hot);
   
   if (hot) printf(YELLOW "%7.3f%s    set pin % 2d pos\n" RESET, time_passed(), time_unit, gpio);

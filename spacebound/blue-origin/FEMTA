@@ -1,0 +1,52 @@
+import RPi.GPIO as GPIO
+
+FLOW_VALVE_1_OPEN = 12
+FLOW_VALVE_2_OPEN = 20
+
+FLOW_VALVE_1_CLOSE = 16
+FLOW_VALVE_2_CLOSE = 21
+
+VENT_VALVE_1_OPEN = 14
+VENT_VALVE_1_CLOSE = 15 
+
+LOW = 0
+HIGH = 1
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(FLOW_VALVE_1_OPEN, GPIO.OUT)
+GPIO.setup(FLOW_VALVE_2_OPEN, GPIO.OUT)
+GPIO.setup(VENT_VALVE_1_OPEN, GPIO.OUT)
+
+GPIO.setup(FLOW_VALVE_1_CLOSE, GPIO.OUT)
+GPIO.setup(FLOW_VALVE_2_CLOSE, GPIO.OUT)
+GPIO.setup(VENT_VALVE_1_CLOSE, GPIO.OUT)
+
+
+def open_flow_valves():
+    GPIO.output(FLOW_VALVE_1_OPEN, HIGH)
+    GPIO.output(FLOW_VALVE_1_CLOSE, LOW)
+    GPIO.output(FLOW_VALVE_2_OPEN, HIGH)
+    GPIO.output(FLOW_VALVE_2_CLOSE, LOW)
+
+
+def close_flow_valves(): 
+    GPIO.output(FLOW_VALVE_1_OPEN, LOW)
+    GPIO.output(FLOW_VALVE_1_CLOSE, HIGH)
+    GPIO.output(FLOW_VALVE_2_OPEN, LOW)
+    GPIO.output(FLOW_VALVE_2_CLOSE, HIGH)
+
+#open_flow_valves()
+
+#Open Flow Sol 1
+GPIO.output(FLOW_VALVE_1_OPEN, HIGH)
+GPIO.output(FLOW_VALVE_1_CLOSE, LOW)
+
+#Close Vent Valve
+GPIO.output(VENT_VALVE_1_OPEN, LOW)
+GPIO.output(VENT_VALVE_1_CLOSE, HIGH)
+
+#Close Flow Sol 2
+GPIO.output(FLOW_VALVE_2_OPEN, LOW)
+GPIO.output(FLOW_VALVE_2_CLOSE, HIGH)
+
+GPIO.cleanup()

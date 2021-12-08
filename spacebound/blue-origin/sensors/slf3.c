@@ -42,11 +42,15 @@ bool read_slf3(i2c_device * slf3_i2c) {
   float temp = (read_raws[4] | (read_raws[3] << 8)) / 200.0f;
   int flag = read_raws[7] | (read_raws[6] << 8);
   
-  int bubble = !!(flag & 0b1); // Bubble flag is in LSB of third byte -- 1 = bubble
-  
-  bind_stream(slf3, fflow , SLF3_MEASURE_FLOW       );
-  bind_stream(slf3, temp  , SLF3_MEASURE_TEMPERATURE);
-  bind_stream(slf3, bubble, SLF3_MEASURE_BUBBLE     );
+  int bubble    = !!(flag & (1<<0)); // Bubble flag is in LSB of third byte -- 1 = bubble
+  int highflow  = !!(flag & (1<<1)); // High-flow is in 2nd least significant bit of third byte 
+  int expsmooth = !!(flag & (1<<5)); // Exponential smoothing is 5th bit
+
+  bind_stream(slf3, fflow    , SLF3_MEASURE_FLOW       );
+  bind_stream(slf3, temp     , SLF3_MEASURE_TEMPERATURE);
+  bind_stream(slf3, bubble   , SLF3_MEASURE_BUBBLE     );
+  bind_stream(slf3, highflow , SLF3_MEASURE_HIGHFLOW   );
+  bind_stream(slf3, expsmooth, SLF3_MEASURE_EXPSMOOTH  );
   
   sensor_log_outputs(slf3, slf3_i2c -> log, NULL);
   sensor_process_triggers(slf3);

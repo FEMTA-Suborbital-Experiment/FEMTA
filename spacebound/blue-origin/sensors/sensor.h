@@ -91,6 +91,7 @@ typedef struct Sensor {
 } Sensor;
 
 extern char *     time_unit;
-extern long       time_start_os;     // system start from the OS's perspective
+extern long       time_start;     // system start from the OS's perspective
+extern struct timespec time_start_os;
 extern List    *  active_sensors;    // every active sensor on craft
 extern Hashmap *  all_sensors;       // every sensor that could be specified

@@ -6,6 +6,7 @@
 extern  void   micro_sleep   (long us               );    // sleep a number of microseconds
 extern  void   nano_sleep    (long ns               );    // sleep a number of nanoseconds
 extern  long   real_time_diff(struct timespec * past);    // get nanoseconds since a point in the past
+extern  float  real_time_diff_float(struct timespec * past);
 
 // console.c (system)
 extern  void   init_console     (void       );    // set up the color system
@@ -99,6 +100,8 @@ extern  void  plot_fgets               (char * s, int n, FILE * stream);
 
 // schedule.c (system)
 extern  float time_passed              (void        );
+extern  float real_time_passed         (void        );
+extern  float os_time_passed           (void        );
 extern  void  build_schedule           (void        );
 extern  void  consider_printing_sensors(int duration);
 

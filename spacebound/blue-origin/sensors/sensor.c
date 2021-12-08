@@ -9,7 +9,8 @@ local void sensor_close(void *);
 local void sensor_do_nothing(Sensor * nil) { return; }
 
 char     * time_unit;
-long       time_start_os;     // system start from the OS's perspective
+long       time_start;        // system start from the OS's perspective
+struct timespec time_start_os;
 List     * active_sensors;    // every active sensor on craft
 List     * all_target_maps;   // all maps associating a target to its channels
 Hashmap  * all_sensors;       // every sensor that could be specified
@@ -108,7 +109,7 @@ void init_sensors() {
   Hashmap * ds18_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
   Hashmap * mcp9_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
   Hashmap * hscm_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
-  Hashmap * slf3_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
+  Hashmap * slf3_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 5);
   Hashmap * test_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 5);
   Hashmap * veml_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
   
@@ -142,6 +143,8 @@ void init_sensors() {
   hashmap_add(slf3_tar, "Flow"       , (void *) (int) SLF3_MEASURE_FLOW       );
   hashmap_add(slf3_tar, "Temperature", (void *) (int) SLF3_MEASURE_TEMPERATURE);
   hashmap_add(slf3_tar, "Bubble"     , (void *) (int) SLF3_MEASURE_BUBBLE     );
+  hashmap_add(slf3_tar, "HighFlow"  , (void *) (int) SLF3_MEASURE_HIGHFLOW   );
+  hashmap_add(slf3_tar, "ExponentialSmoothing", (void *) (int) SLF3_MEASURE_EXPSMOOTH);
   
   hashmap_add(ad15_tar, "A0"         , (void *) (int) AD15_MEASURE_A0         );
   hashmap_add(ad15_tar, "A1"         , (void *) (int) AD15_MEASURE_A1         );
@@ -223,7 +226,10 @@ void sensor_log_header(Sensor * sensor, char * color) {
   
   fprintf(file, "\n\n%s%s\nStart time %s\n", color, sensor -> name, human_time);
   fprintf(file, "Real Time [%s]\tOS Time [s]", ds32_time_unit);
-  
+ 
+  // Rather than using an arbitrary 0 value for OS time, count number of interrupts every 1024hz
+  // fprintf(file, "Real Time [%s]\tOS Time [s]", ds32_time_unit);
+
   for (int i = 0; i < sensor -> data_streams; i++) {
     
     Output * output = &sensor -> outputs[i];
@@ -237,9 +243,13 @@ void sensor_log_header(Sensor * sensor, char * color) {
 void sensor_log_outputs(Sensor * sensor, FILE * file, char * addendum) {
   // the format for every sensor log.
   // the log file is assumed to be open.
-  
-  fprintf(file, "%.5f\t%.4f", time_passed(), 0);
-  
+ 
+  // Instead of passing zero, pass number of interrupts	
+  fprintf(file, "%.5f\t%.4f", time_passed(), os_time_passed());
+ 
+  // time_passed will be the OS time	
+  // fprintf(file, "%.5f\t%.4f", schedule->interrupts * schedule->interrupt_interval, time_passed());
+  // fprintf(file, "%.5d\t%.5f", schedule->interrupts, schedule->interrupt_interval);
   for (int i = 0; i < sensor -> data_streams; i++)
     fprintf(file, "\t%.4f", sensor -> outputs[i].measure);
   

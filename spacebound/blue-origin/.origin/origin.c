@@ -11,8 +11,8 @@ int  console_print_interval = 1000;    // ms between prints
 
 int main(int nargs, char ** args) {
   
-  time_start_os = time(NULL);    // OS time when system started
-  //clock_gettime(CLOCK_REALTIME, &time_start_os);
+  time_start = time(NULL);    // OS time when system started
+  clock_gettime(CLOCK_REALTIME, &time_start_os);
   
   if (gpioInitialise() < 0)
     exit_printing(ERROR_OPERATING_SYSTEM, "pigpio unable to start");

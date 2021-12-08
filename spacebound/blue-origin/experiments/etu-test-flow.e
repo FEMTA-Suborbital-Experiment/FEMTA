@@ -34,12 +34,12 @@ define leave transition
 
 // Following sensors from flight.e, on Evan's branch
 Sensor ds32 1Hz {  // Real Time Clock
-    [calibrate   | Time, poly, raw, s | 0.0009765625 0.0];
+    [calibrate   | Time, poly, raw, s | 0.0009765625, 0.0];
     [conversions | Time, raw, s       |                  ];
 }
 
 Sensor slf3_left 100Hz {  // Flow
-    [calibrate   | Flow, poly, raw, ml/min | 1.0 0.0];
+    [calibrate   | Flow, poly, raw, ml/min | 1.0, 0.0];
     [conversions | Flow, raw, ml/min       |         ];
 }
 

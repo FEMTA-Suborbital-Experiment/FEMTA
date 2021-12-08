@@ -1,0 +1,67 @@
+/*
+** MCP9 Test Fall 2021
+**      author(s): Jake Valdez
+**        date: October 28, 2021
+** description:
+**     Test IR and Digital flow sensors only to conveniently measure
+**     flow rate, temperature, and bubble
+*/
+
+define enter start
+
+
+Sensor slf3_left 10Hz {  // Flow
+    // Calibrate and convert Flow from raw to mL/min
+    [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
+    [conversions | Flow, raw, mLpmin       |         ];
+
+    // slf3 contains an internal calibration, so just use the raw temperature
+    // from slf3
+    // see slf3.c in blue-origin/sensors
+    [calibrate   | Temperature, poly, raw, C | 1.0, 0.0];
+    [conversions | Temperature, raw, C       |         ];
+
+    // Similarly, detect if bubble in flow, like IR Flow sensor
+    // No further calibrations
+    [calibrate   | Bubble, poly, raw, V | 1.0, 0.0];
+    [conversions | Bubble, raw, V       |         ];
+
+    [print       | pink, Flow         | 3                         ];
+    [print       | pink, Temperature     | 3                            ];
+    [print       | pink, Bubble     | 3                            ];
+}
+
+
+// Comments for implementation above also concern "right" flow sensor
+Sensor slf3_right 100Hz {  // Flow
+    [calibrate   | Flow, poly, raw, mLpmin | 1.0, 0.0];
+    [conversions | Flow, raw, mLpmin       |         ];
+
+    [calibrate   | Temperature, poly, raw, C | 1.0, 0.0];
+    [conversions | Temperature, raw, C       |         ];
+
+    [calibrate   | Bubble, poly, raw, V | 1.0, 0.0];
+    [conversions | Bubble, raw, V       |         ];
+
+    [print       | cyan, Flow         | 3                         ];
+    [print       | cyan, Temperature     | 3                            ];
+    [print       | cyan, Bubble     | 3                            ];
+}
+
+/*
+// IR Flow Sensors
+Sensor ad15_sda 10Hz {
+  where A0 is flow_left;
+  where A1 is flow_right;
+
+  // IR flow sensor definitions
+  // If IR sensors detect a flow, there should be voltage
+  [calibrate | A0, poly, raw, V | 1, 0];
+  [calibrate | A1, poly, raw, V | 1, 0];
+
+  [conversions | A0, raw, V | 		];
+  [conversions | A1, raw, V | 		];
+  [print       | mint, flow_left         | 3                         ];
+  [print       | mint, flow_right     | 3                            ];
+}
+*/

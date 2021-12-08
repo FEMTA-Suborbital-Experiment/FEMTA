@@ -20,3 +20,12 @@ long real_time_diff(struct timespec * past) {    // ns since point in the past
   
   return (now.tv_sec - past->tv_sec) * 1000000000l + (now.tv_nsec - past->tv_nsec);
 }
+
+float real_time_diff_float(struct timespec * past) {    // ns since point in the past
+  
+  struct timespec now;
+  
+  clock_gettime(CLOCK_REALTIME, &now);
+  
+  return (float) (now.tv_sec - past->tv_sec) + (float) (now.tv_nsec - past->tv_nsec) / 1E9;
+}
