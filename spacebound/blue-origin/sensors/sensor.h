@@ -20,7 +20,6 @@
 
 #define I2C_BUS 0x1
 #define ONE_BUS 0x2
-#define SPI_BUS 0x3
 
 typedef struct Trigger {
   
@@ -45,7 +44,7 @@ typedef struct Trigger {
 
 typedef struct Output {
   
-  float  measure;         // measurement last taken
+  double  measure;         // measurement last taken
   float  smoothed;        // measurement after smoothing
   List * series;          // path of conversions required to get final measurement
   List * triggers;        // sensor triggers for this particular output stream
@@ -70,7 +69,6 @@ typedef struct Sensor {
   union {
     i2c_device * i2c;       // i2c communications info
     one_device * one;       // 1-wire communications info
-    spi_device * spi;       // spi communications info
   };
   int bus;                  // which bus is used
   
@@ -86,7 +84,7 @@ typedef struct Sensor {
   
   bool requested;            // whether sensor has actually been specified during parsing
   
-  uint8 address;             // i2c address or spi channel
+  uint8 address;             // i2c address
   
   void * data;               // sensor-specific data
   

@@ -107,11 +107,9 @@ void init_sensors() {
   Hashmap * ds32_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
   Hashmap * ds18_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
   Hashmap * mcp9_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
-  Hashmap * hscm_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
   Hashmap * slf3_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
   Hashmap * test_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 5);
   Hashmap * veml_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 2);
-  Hashmap * eth0_tar = hashmap_create(hash_string, compare_strings, NULL, NULL, 1);
   
   hashmap_add(ds32_tar, "Time"       , (void *) (int) DS32_MEASURE_TIME       );
   hashmap_add(ds32_tar, "Temperature", (void *) (int) DS32_MEASURE_TEMPERATURE);
@@ -119,15 +117,14 @@ void init_sensors() {
   hashmap_add(ds18_tar, "Temperature", (void *) (int) DS18_MEASURE_TEMPERATURE);
   
   hashmap_add(mcp9_tar, "Temperature", (void *) (int) MCP9_MEASURE_TEMPERATURE);
-
-  hashmap_add(hscm_tar, "Pressure"   , (void *) (int) HSCM_MEASURE_PRESSURE   );
-  hashmap_add(hscm_tar, "Temperature", (void *) (int) HSCM_MEASURE_TEMPERATURE);
   
   hashmap_add(test_tar, "zero"       , (void *) (int) TEST_MEASURE_ZERO       );
   hashmap_add(test_tar, "identity"   , (void *) (int) TEST_MEASURE_IDENTITY   );
   hashmap_add(test_tar, "sine"       , (void *) (int) TEST_MEASURE_SINE       );
   hashmap_add(test_tar, "cosine"     , (void *) (int) TEST_MEASURE_COSINE     );
   hashmap_add(test_tar, "random"     , (void *) (int) TEST_MEASURE_RANDOM     );
+  hashmap_add(test_tar, "randsmooth"  , (void *) (int) TEST_MEASURE_RANDSMOOTH  );
+  //hashmap_add(test_tar, "pulse"      , (void *) (int) TEST_MEASURE_PULSE      );
   
   hashmap_add(adxl_tar, "X"          , (void *) (int) ADXL_MEASURE_X          );
   hashmap_add(adxl_tar, "Y"          , (void *) (int) ADXL_MEASURE_Y          );
@@ -148,14 +145,11 @@ void init_sensors() {
   hashmap_add(ad15_tar, "A1"         , (void *) (int) AD15_MEASURE_A1         );
   hashmap_add(ad15_tar, "A2"         , (void *) (int) AD15_MEASURE_A2         );
   hashmap_add(ad15_tar, "A3"         , (void *) (int) AD15_MEASURE_A3         );
-
-  hashmap_add(eth0_tar, "State"      , (void *) (int) ETH0_MEASURE_STATE      );
   
   hashmap_add(all_sensors, "adxl"      , sensor_create("adxl"      , ADXL_ADDRESS, adxl_tar, I2C_BUS));
   hashmap_add(all_sensors, "ds32"      , sensor_create("ds32"      , DS32_ADDRESS, ds32_tar, I2C_BUS));
   hashmap_add(all_sensors, "ds18"      , sensor_create("ds18"      ,            0, ds18_tar, ONE_BUS));
   hashmap_add(all_sensors, "mcp9"      , sensor_create("mcp9"      , MCP9_ADDRESS, mcp9_tar, I2C_BUS));
-  hashmap_add(all_sensors, "hscm"      , sensor_create("hscm"      , HSCM_ADDRESS, hscm_tar, I2C_BUS));
   hashmap_add(all_sensors, "arm6"      , sensor_create("arm6"      , FAKE_ADDRESS, arm6_tar, I2C_BUS));
   hashmap_add(all_sensors, "test"      , sensor_create("test"      , FAKE_ADDRESS, test_tar, I2C_BUS));
   hashmap_add(all_sensors, "veml"      , sensor_create("veml"      , VEML_ADDRESS, veml_tar, I2C_BUS));
@@ -165,10 +159,9 @@ void init_sensors() {
   hashmap_add(all_sensors, "ad15_vdd"  , sensor_create("ad15_vdd"  ,     AD15_VDD, ad15_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_sda"  , sensor_create("ad15_sda"  ,     AD15_SDA, ad15_tar, I2C_BUS));
   hashmap_add(all_sensors, "ad15_scl"  , sensor_create("ad15_scl"  ,     AD15_SCL, ad15_tar, I2C_BUS));
-  hashmap_add(all_sensors, "eth0"      , sensor_create("eth0"      , ETH0_CHANNEL, eth0_tar, SPI_BUS));
   
   all_target_maps = 
-    list_from(11, adxl_tar, ad15_tar, arm6_tar, ds32_tar, ds18_tar, eth0_tar, mcp9_tar, hscm_tar, slf3_tar, test_tar, veml_tar);
+    list_from(9, adxl_tar, ad15_tar, arm6_tar, ds32_tar, ds18_tar, mcp9_tar, slf3_tar, test_tar, veml_tar);
   
   all_target_maps -> value_free = vhashmap_delete;
   
@@ -192,7 +185,6 @@ void sensor_close(void * vsensor) {
   
   if      (sensor -> bus == I2C_BUS) i2c_close(sensor -> i2c);
   else if (sensor -> bus == ONE_BUS) one_close(sensor -> one);
-  else if (sensor -> bus == SPI_BUS) spi_close(sensor -> spi);
 }
 
 void flip_print(void * nil, char * raw_text) {
@@ -207,10 +199,10 @@ void flip_print(void * nil, char * raw_text) {
       sensor -> print = !sensor -> print;
 }
 
-void bind_stream(Sensor * sensor, float reading, int stream) {
+void bind_stream(Sensor * sensor, double reading, int stream) {
   // processes a reading
   
-  Output * output = &(sensor -> outputs[stream]);
+  Output * output = &sensor -> outputs[stream];
   
   output -> measure = series_compute(output -> series, reading);
   
@@ -223,9 +215,8 @@ void sensor_log_header(Sensor * sensor, char * color) {
   
   FILE * file = NULL;
   
-  if       (sensor -> bus == I2C_BUS)  file = sensor -> i2c -> log;
-  else if  (sensor -> bus == ONE_BUS)  file = sensor -> one -> log;
-  else if  (sensor -> bus == SPI_BUS)  file = sensor -> spi -> log;
+  if (sensor -> bus == I2C_BUS) file = sensor -> i2c -> log;
+  else                          file = sensor -> one -> log;
   
   fprintf(file, "\n\n%s%s\nStart time %s\n", color, sensor -> name, human_time);
   fprintf(file, "Real Time [%s]\tOS Time [s]", ds32_time_unit);

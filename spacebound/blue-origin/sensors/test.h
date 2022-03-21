@@ -13,3 +13,6 @@
 #define TEST_MEASURE_SINE     2   // a sine wave based on time
 #define TEST_MEASURE_COSINE   3   // a cosine wave based on time
 #define TEST_MEASURE_RANDOM   4   // a stream of random integers
+
+#define TEST_MEASURE_RANDSMOOTH 5   // a stream of sawtooth
+//define TEST_MEASURE_PULSE    0   // a stream of pulses 

@@ -85,15 +85,6 @@ extern  void         start_one        (void                                     
 extern  one_device * create_one_device(Sensor * sensor, char * path, char * log_path, one_reader read);
 extern  void         one_close        (one_device * one                                              );
 
-// spi.c (system)
-extern  void         init_spi         (void                                              );
-extern  void         drop_spi         (void                                              );
-extern  void         start_spi        (void                                              );
-extern  spi_device * create_spi_device(Sensor * sensor, spi_reader reader, char * message);
-extern  void         spi_close        (spi_device * spi                                  );
-extern  bool         spi_read_bytes   (spi_device * dev, uint8 * buf, char n             );
-extern  bool         spi_write_bytes  (spi_device * dev, uint8 * buf, char n             );
-
 // parser.l (parser)
 extern  int    yylex_destroy(void          );
 
@@ -114,7 +105,7 @@ extern  void  consider_printing_sensors(int duration);
 // sensor.c (sensors)
 extern  void  init_sensors           (void                                         );
 extern  void  drop_sensors           (void                                         );
-extern  void  bind_stream            (Sensor * sensor, float reading, int stream   );
+extern  void  bind_stream            (Sensor * sensor, double reading, int stream   );
 extern  void  sensor_process_triggers(Sensor * sensor                              );
 extern  void  sensor_log_header      (Sensor * sensor, char * color                );
 extern  void  sensor_log_outputs     (Sensor * sensor, FILE * file, char * addendum);
@@ -128,18 +119,15 @@ extern  Sensor * init_arm6(Sensor * proto              );
 extern  Sensor * init_ds18(Sensor * proto, char * path );
 extern  Sensor * init_ds32(Sensor * proto              );
 extern  Sensor * init_mcp9(Sensor * proto              );
-extern  Sensor * init_hscm(Sensor * proto              );
 extern  Sensor * init_slf3(Sensor * proto              );
 extern  Sensor * init_test(Sensor * proto              );
 extern  Sensor * init_veml(Sensor * proto              );
-extern  Sensor * init_eth0(Sensor * proto              );
 
 // simulate.c
 extern  int   return_zero                        (void                       );
 extern  void  print_simulation_info              (void                       );
 extern  bool  simulation_read_i2c                (i2c_device * i2c           );
 extern  bool  simulation_read_one                (one_device * one           );
-/* TODO: Add spi simulated read? (check if used) */
 extern  int   simulation_gpio_read               (uint8 broadcom             );
 extern  int   simulation_gpio_write              (uint8 broadcom, uint8 level);
 extern  bool  simulation_report_containment_error(void * nil, ...            ) opt(noreturn);
@@ -168,7 +156,7 @@ extern  Conversion      get_universal_conversion       (char * from, char * to  
 extern  SeriesElement * series_element_from_conversion (Conversion conversion              );
 extern  SeriesElement * series_element_from_calibration(Calibration * calibration          );
 extern  void            series_element_delete          (void * vSeriesElement              );
-extern  float           series_compute                 (List * series, float x             );
+extern  double           series_compute                 (List * series, double x             );
 extern  void            series_delete                  (List * series                      );
 extern  float           convert_identity               (float x                            ) opt(const);
 

@@ -320,7 +320,7 @@ static float compute_curve(float x, Calibration * calibration) {
   exit_printing(ERROR_PROGRAMMER, "Tried to evaluate unknown curve " CYAN "%s", curve);
 }
 
-float series_compute(List * series, float x) {
+double series_compute(List * series, double x) {
   // computes a series on x to yeild a final measure value, which may include
   // universal conversions as well as sensor-specific calibrations, as per Attribute #1.
   
