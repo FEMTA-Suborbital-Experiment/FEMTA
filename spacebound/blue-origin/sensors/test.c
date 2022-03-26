@@ -16,25 +16,24 @@ bool read_test(i2c_device * test_i2c) {
 
   Sensor * test = test_i2c -> sensor;
 
+  // Initialize one array instance of past values until the end of the program
   static double rand_ary[TEST_SMOOTHING_SAMPLES] = {0};
 
-  //for (int i = 9; i > 0; i--) {
-  //	rand_ary[i] = rand_ary[i-1];
-  //}
-
-  memmove(&rand_ary[1], &rand_ary[0], sizeof(double)*9);
+  // This sets the second value of the array to the first value of the array
+  // Since the first value changes, and the code runs in a loop, this statement
+  // essentially "shifts" the values of the array by one
+  memmove(&rand_ary[1], &rand_ary[0], sizeof(double)*(TEST_SMOOTHING_SAMPLES-1));
 
   rand_ary[0] = rand();
-  // memmove(&rand_ary[1], &rand_ary[0], sizeof(int)*9);
 
   double total = 0;
   double filled = 0;
 
   for (int i = 0; i < TEST_SMOOTHING_SAMPLES; i++) {
-	if (rand_ary[i] > 0) {
-		filled += (TEST_SMOOTHING_SAMPLES - i);
-		total += ((TEST_SMOOTHING_SAMPLES - i) * rand_ary[i]);
-	}
+  	if (rand_ary[i] > 0) {
+  		filled += (TEST_SMOOTHING_SAMPLES - i);
+  		total += ((TEST_SMOOTHING_SAMPLES - i) * rand_ary[i]);
+  	}
 	  // total += rand_ary[i];
   }
 
