@@ -126,6 +126,7 @@ bool read_ad15(i2c_device * ad15_i2c) {
 
   }
 
+  // How would I make a bind stream check the smoothed channel?
   bind_stream(ad15, counts, config -> mode_cycle);
 
   if (config -> current_mode == config -> modes -> head -> prev) {

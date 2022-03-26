@@ -5,11 +5,11 @@
  *   Analog to digital converter
  *   Texas Instruments ADS1115
  *   Connected via I2C
- * 
- * Datasheet: 
+ *
+ * Datasheet:
  *   https://cdn-shop.adafruit.com/datasheets/ads1115.pdf
- * 
- * Author: 
+ *
+ * Author:
  *   Noah Franks
  */
 
@@ -19,6 +19,10 @@
 #define AD15_MEASURE_A1 1
 #define AD15_MEASURE_A2 2
 #define AD15_MEASURE_A3 3
+#define AD15_SMOOTHED_A0 4
+#define AD15_SMOOTHED_A1 5
+#define AD15_SMOOTHED_A2 6
+#define AD15_SMOOTHED_A3 7
 
 #define A01 0b000
 #define A23 0b011
@@ -35,7 +39,7 @@
 typedef struct AD15_Config {
   // read pages 18-19 of datasheet for more informaiton;
   // some of this has a bit of nuance.
-  
+
   union {
     uchar low_byte;           // ease of byte access
     struct {
@@ -46,7 +50,7 @@ typedef struct AD15_Config {
       uchar DATA_RATE: 3;     // samples per second
     };
   };
-  
+
   union {
     uchar high_byte;          // ease of byte access
     struct {
@@ -56,9 +60,9 @@ typedef struct AD15_Config {
       uchar OS  : 1;          // sleep state
     };
   };
-  
+
   List * modes;               // list of modes used to change config as needed
   ListNode * current_mode;    // the most recent mode configured configured
   int mode_cycle;             // where in the read cycle the current mode is
-  
+
 } AD15_Config;
