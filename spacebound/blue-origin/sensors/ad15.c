@@ -55,112 +55,122 @@ local void free_ad15(Sensor * ad15);
 local void configure_ad15(Sensor * ad15);
 
 Sensor * init_ad15(Sensor * ad15, List * modes) {
-  
+
   ad15 -> name = "ADS1115";
   ad15 -> teardown = free_ad15;
   ad15 -> i2c = create_i2c_device(ad15, read_ad15, "An analog to digital converter");
-  
+
   sensor_log_header(ad15, ORANGE);
-  
-  
+
+
   /* set up the configuration  (datasheet page 19) */
-  
+
   AD15_Config * sensor_config = malloc(sizeof(*sensor_config));
-  
+
   sensor_config -> COMP_QUE  = AD15_QUE_DISABLE;
   sensor_config -> COMP_LAT  = AD15_LAT_DONT_LATCH;
   sensor_config -> COMP_POL  = AD15_POL_ACTIVE_LOW;
   sensor_config -> COMP_MODE = AD15_COMP_TRADITIONAL;
   sensor_config -> DATA_RATE = AD15_RATE_860HZ;
-  
+
   sensor_config -> MODE      = AD15_MODE_LOW_POWER;         // Undocumented: reduces bleeding
   sensor_config -> PGA       = AD15_PGA_6144V;              // ------------------------------
   sensor_config -> MUX       = AD15_MUX_SINGLE_AIN0;
   sensor_config -> OS        = AD15_OS_BEGIN_CONVERSION;
-  
+
   sensor_config -> modes     = modes;
-  
+
   ad15 -> data = sensor_config;
-  
-  
+
+
   /* prepare for first read */
-  
+
   sensor_config -> current_mode = modes -> head;
   sensor_config -> mode_cycle = 0;
-  
+
   uint8 first_mode = (uint8) (int) sensor_config -> current_mode -> value;
-  
+
   sensor_config -> high_byte = (first_mode << 4) | (sensor_config -> high_byte & 0b10001111);
-  
+
   configure_ad15(ad15);
-  
+
   return ad15;
 }
 
 bool read_ad15(i2c_device * ad15_i2c) {
-  
+
   Sensor * ad15 = ad15_i2c -> sensor;
-  
+
   if (schedule -> last_i2c_dev == ad15_i2c)    // didn't have enough time to reconfigure,
     micro_sleep(1200);                         // sleep to stop the bleeding
-  
+
   AD15_Config * config = ad15 -> data;
-  
+
   ad15_i2c -> reading = true;    // this sensor is doing a partial read
-  
+
   // perform the sensor read
-  
+
   uint8 ad15_raws[2];
-  
+
   i2c_read_bytes(ad15_i2c, 0x00, ad15_raws, 2);    // TODO: error checking
-  
+
   int16 counts = (ad15_raws[0] << 8) | ad15_raws[1];
-  
+
+  if (ad15->address == AD15_GND) {
+
+  } else if (ad15->address == AD15_VDD) {
+
+  } else if (ad15->address == AD15_SCL) {
+
+  } else if (ad15->address == AD15_SCL) {
+
+  }
+
   bind_stream(ad15, counts, config -> mode_cycle);
-  
+
   if (config -> current_mode == config -> modes -> head -> prev) {
     // must be on last mode
-    
+
     ad15_i2c -> reading = false;    // partial read is complete
-    
+
     sensor_log_outputs(ad15, ad15_i2c -> log, NULL);
     sensor_process_triggers(ad15);    // every stream has been populated
   }
-  
-  
+
+
   // change mode before leaving.
   // this is done to give the sensor time to actually flip values
-  
+
   config -> current_mode = config -> current_mode -> next;
   config -> mode_cycle = (config -> mode_cycle + 1) % (config -> modes -> elements);
-  
+
   uint8 next_mode = (uint8) (int) config -> current_mode -> value;
-  
+
   config -> high_byte = (next_mode << 4) | (config -> high_byte & 0b10001111);
-  
+
   configure_ad15(ad15);
   return true;
 }
 
 void configure_ad15(Sensor * ad15) {
-  
+
   AD15_Config * config = ad15 -> data;
-  
+
   uint8 config_request[3] = {
        AD15_CONFIG_REG,          // point to config register
        config -> high_byte,      // fill in the request according to the config
        config -> low_byte,       // -------------------------------------------
   };
-  
+
   i2c_raw_write(ad15 -> i2c, config_request, 3);
 }
 
 void free_ad15(Sensor * ad15) {
-  
+
   AD15_Config * config = ad15 -> data;
-  
+
   list_delete(config -> modes);
   config -> modes = NULL;
-  
+
   blank(ad15 -> data);
 }

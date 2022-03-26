@@ -141,7 +141,7 @@ extern  void    state_queue        (StateChange * change, bool enter);    // que
 extern  void    process_state_queue(int duration                    );    // process delayed changes
 extern  void    wait_on_mission    (void                            );    // wait for mission complete
 extern  void    print_all_states   (void                            );    // nicely print every state
-  
+
 // units.c (math)
 extern  void            init_units                     (void                               );
 extern  void            drop_units                     (void                               );
@@ -162,6 +162,20 @@ extern  float           convert_identity               (float x                 
 
 // user.c (system)
 extern  void  present_interface(void);    // allow the user to command the process
+
+// smoothing parameters in ms
+#define AD15_GND_SMOOTHING_SAMPLES 10
+#define AD15_VDD_SMOOTHING_SAMPLES 10
+#define AD15_SDA_SMOOTHING_SAMPLES 10
+#define AD15_SCL_SMOOTHING_SAMPLES 10
+
+#define ADXL_SMOOTHING_SAMPLES 10
+#define SLF3_SMOOTHING_SAMPLES 10
+
+#define HSCM_SMOOTHING_SAMPLES 10
+#define MCP9_SMOOTHING_SAMPLES 10
+
+#define TEST_SMOOTHING_SAMPLES 10
 
 #ifdef DEBUG_MODE
 #define malloc        debug_malloc
