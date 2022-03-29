@@ -13,6 +13,7 @@
  *   Mark Hartigan
  */
 
-#define MCP9_ADDRESS 0x1F
+#define MCP9_ADDRESS 0x18
 
 #define MCP9_MEASURE_TEMPERATURE 0
+#define MCP9_SMOOTH_TEMPERATURE 0

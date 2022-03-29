@@ -117,6 +117,7 @@ void init_sensors() {
   hashmap_add(ds18_tar, "Temperature", (void *) (int) DS18_MEASURE_TEMPERATURE);
 
   hashmap_add(mcp9_tar, "Temperature", (void *) (int) MCP9_MEASURE_TEMPERATURE);
+  hashmap_add(mcp9_tar, "STemperature", (void *) (int) MCP9_SMOOTH_TEMPERATURE);
 
   hashmap_add(test_tar, "zero"       , (void *) (int) TEST_MEASURE_ZERO       );
   hashmap_add(test_tar, "identity"   , (void *) (int) TEST_MEASURE_IDENTITY   );
